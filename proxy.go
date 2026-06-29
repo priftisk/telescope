@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"log/slog"
 	"net/http"
@@ -25,7 +26,15 @@ func runProxy(ctx context.Context, rt *RouteTable) {
 		}
 		proxy := httputil.NewSingleHostReverseProxy(targetURL)
 		proxy.ServeHTTP(w, r)
-		slog.Info("proxied: %s -> %s", targetHost, targetAddress)
+		slog.Info("proxied", "host", targetHost, "address", targetAddress)
+	})
+	mux.HandleFunc("GET /routes", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		routes := rt.List()
+		// fmt.Println(routes)
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(routes)
 	})
 
 	server := &http.Server{

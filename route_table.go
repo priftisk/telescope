@@ -43,3 +43,9 @@ func (rt *RouteTable) Lookup(host string) (string, bool) {
 	}
 	return "", false
 }
+
+func (rt *RouteTable) List() []Route {
+	rt.Mutex.RLock()
+	defer rt.Mutex.RUnlock()
+	return rt.Routes
+}
