@@ -1,0 +1,55 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/client"
+)
+
+func getContainerHostAndPort(info container.InspectResponse) (string, string) {
+	if info.Config == nil || info.Config.Labels == nil {
+		return "", ""
+	}
+	host := info.Config.Labels["proxy.host"]
+	if host == "" {
+		return "", ""
+	}
+	port := info.Config.Labels["proxy.port"]
+	if port == "" {
+		return "", ""
+	}
+
+	if info.NetworkSettings == nil {
+		return "", ""
+	}
+	fmt.Println(info.NetworkSettings.Networks)
+	for _, net := range info.NetworkSettings.Networks {
+		if net.IPAddress.String() != "" {
+			return host, net.IPAddress.String() + ":" + port
+		}
+	}
+	return "", ""
+}
+
+func onStartup(ctx context.Context, apiClient *client.Client, rt *RouteTable) {
+	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{All: true})
+	if err != nil {
+		log.Fatal("failed to list containers:", err)
+	}
+	for _, c := range containers.Items {
+		info, err := apiClient.ContainerInspect(ctx, c.ID, client.ContainerInspectOptions{})
+		if err != nil {
+			log.Printf("inspect failed for %s: %v", c.ID, err)
+			continue
+		}
+		host, addr := getContainerHostAndPort(info.Container)
+		fmt.Println(host, addr)
+		if host == "" {
+			continue
+		}
+		rt.Register(host, addr)
+	}
+}
