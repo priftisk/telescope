@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 
 	"github.com/moby/moby/client"
 )
@@ -26,35 +27,33 @@ func watchEvents(ctx context.Context, apiClient client.APIClient, rt *RouteTable
 			switch event.Action {
 
 			case "start", "restart":
-				// log.Printf("processing container start/restart: %s", event.Actor.ID)
+				// slog.Info("processing container start/restart: %s", event.Actor.ID)
 
 				c, err := apiClient.ContainerInspect(ctx, event.Actor.ID, client.ContainerInspectOptions{})
 				if err != nil {
-					log.Printf("inspect failed for container=%s error=%v", event.Actor.ID, err)
+					slog.Info("inspect failed for container", "container", event.Actor.ID, "error", err)
 					continue
 				}
 
 				host, addr := getContainerHostAndPort(c.Container)
 				if host == "" {
-					log.Printf("skipping container=%s (no proxy host resolved)", event.Actor.ID)
+					slog.Info("skipping container(no proxy host resolved)", "container", event.Actor.ID)
 					continue
 				}
 
 				rt.Register(host, addr)
-				log.Printf("registered route: host=%s addr=%s container=%s", host, addr, event.Actor.ID)
 
 			case "die", "kill", "stop":
-				log.Printf("deregistering container route: container=%s action=%s", event.Actor.ID, event.Action)
 
 				rt.Deregister(event.Actor.ID)
 			}
 
 		case err := <-eventChan.Err:
-			log.Printf("docker event stream error: %v", err)
+			slog.Info("docker event stream error", "error", err.Error())
 			log.Fatal("event stream closed unexpectedly")
 
 		case <-ctx.Done():
-			log.Println("context cancelled, shutting down event watcher")
+			slog.Info("context cancelled, shutting down event watcher")
 			return
 		}
 	}

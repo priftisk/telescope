@@ -3,15 +3,23 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 
 	"github.com/moby/moby/client"
 )
 
 func main() {
-	parentContext := context.Background()
-	ctx, cancel := context.WithCancel(parentContext)
-	defer cancel()
+	// ctx, cancel := context.WithCancel(context.Background())
+	// defer cancel()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	slog.SetDefault(logger)
 
 	apiClient, err := client.New(
 		client.FromEnv,

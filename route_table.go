@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"slices"
 	"sync"
 )
@@ -19,13 +19,17 @@ func (rt *RouteTable) Register(host string, target string) {
 		HostName:      host,
 		TargetAddress: target,
 	})
-	log.Printf("Registered: %s -> %s", host, target)
+	slog.Info("registered route",
+		"host", host,
+		"addr", target,
+	)
 }
 func (rt *RouteTable) Deregister(host string) {
 	rt.Mutex.Lock()
 	rt.Routes = slices.DeleteFunc(rt.Routes, func(r Route) bool {
 		return r.HostName == host
 	})
+	slog.Info("deregistering container route", "container", host)
 	defer rt.Mutex.Unlock()
 }
 

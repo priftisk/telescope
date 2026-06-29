@@ -12,12 +12,12 @@ func getContainerHostAndPort(info container.InspectResponse) (string, string) {
 	if info.Config == nil || info.Config.Labels == nil {
 		return "", ""
 	}
-	host := info.Config.Labels["proxy.host"]
-	if host == "" {
+	var host, port string
+	if host = info.Config.Labels["proxy.host"]; host == "" {
 		return "", ""
 	}
-	port := info.Config.Labels["proxy.port"]
-	if port == "" {
+
+	if port = info.Config.Labels["proxy.port"]; port == "" {
 		return "", ""
 	}
 

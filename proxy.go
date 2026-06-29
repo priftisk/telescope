@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -19,12 +20,12 @@ func runProxy(ctx context.Context, rt *RouteTable) {
 		}
 		targetURL, err := url.Parse("http://" + targetAddress)
 		if err != nil {
-			log.Println(err)
+			slog.Error(err.Error())
 			return
 		}
 		proxy := httputil.NewSingleHostReverseProxy(targetURL)
 		proxy.ServeHTTP(w, r)
-		log.Printf("proxied: %s -> %s", targetHost, targetAddress)
+		slog.Info("proxied: %s -> %s", targetHost, targetAddress)
 	})
 
 	server := &http.Server{
@@ -35,11 +36,11 @@ func runProxy(ctx context.Context, rt *RouteTable) {
 	// watch for ctx cancellation
 	go func() {
 		<-ctx.Done()
-		log.Println("context cancelled, shutting down proxy")
+		slog.Info("context cancelled, shutting down proxy")
 		server.Shutdown(context.Background())
 	}()
 
-	log.Println("Proxy listening on :8901")
+	slog.Info("Proxy listening on :8901")
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatalf("proxy error: %v", err)
 	}
