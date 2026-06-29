@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/moby/moby/client"
@@ -20,9 +19,9 @@ func main() {
 	}
 	defer apiClient.Close()
 
-	var rt *RouteTable
+	var rt *RouteTable = &RouteTable{}
 
 	onStartup(ctx, apiClient, rt)
-	fmt.Println(rt)
+
 	watchEvents(ctx, apiClient, rt)
 }

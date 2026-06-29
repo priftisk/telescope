@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/moby/moby/api/types/container"
@@ -25,10 +24,14 @@ func getContainerHostAndPort(info container.InspectResponse) (string, string) {
 	if info.NetworkSettings == nil {
 		return "", ""
 	}
-	fmt.Println(info.NetworkSettings.Networks)
-	for _, net := range info.NetworkSettings.Networks {
-		if net.IPAddress.String() != "" {
-			return host, net.IPAddress.String() + ":" + port
+	networks := info.NetworkSettings.Networks
+	var containerIP string
+
+	// Get the first non-empty IP
+	for _, v := range networks {
+		if v.IPAddress.IsValid() && !v.IPAddress.IsUnspecified() {
+			containerIP = v.IPAddress.String()
+			return host, containerIP + ":" + port
 		}
 	}
 	return "", ""
@@ -46,7 +49,7 @@ func onStartup(ctx context.Context, apiClient *client.Client, rt *RouteTable) {
 			continue
 		}
 		host, addr := getContainerHostAndPort(info.Container)
-		fmt.Println(host, addr)
+
 		if host == "" {
 			continue
 		}
