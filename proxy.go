@@ -32,14 +32,14 @@ func runProxy(ctx context.Context, rt *RouteTable) {
 		Handler: mux,
 	}
 
-	// watch for cancellation and shut down the server gracefully
+	// watch for ctx cancellation
 	go func() {
 		<-ctx.Done()
 		log.Println("context cancelled, shutting down proxy")
 		server.Shutdown(context.Background())
 	}()
 
-	log.Println("gateway listening on :8901")
+	log.Println("Proxy listening on :8901")
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Fatalf("proxy error: %v", err)
 	}
