@@ -18,7 +18,7 @@ func getContainerHostAndPort(info container.InspectResponse) (string, string) {
 	}
 
 	if port = info.Config.Labels["proxy.port"]; port == "" {
-		return "", ""
+		port = "80"
 	}
 
 	if info.NetworkSettings == nil {
