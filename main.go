@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"log"
+	"sync"
 
 	"github.com/moby/moby/client"
 )
 
 func main() {
-	ctx := context.Background()
+	parentContext := context.Background()
+	ctx, cancel := context.WithCancel(parentContext)
+	defer cancel()
 
 	apiClient, err := client.New(
 		client.FromEnv,
@@ -21,7 +24,19 @@ func main() {
 
 	var rt *RouteTable = &RouteTable{}
 
+	// 1. Seed the route table — blocking, must finish first
 	onStartup(ctx, apiClient, rt)
 
-	watchEvents(ctx, apiClient, rt)
+	// 2. Launch event watcher in background
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		watchEvents(ctx, apiClient, rt)
+	})
+
+	// 3. Start HTTP proxy — blocking, keeps main alive
+	// when ctx is cancelled, runProxy calls server.Shutdown
+	runProxy(ctx, rt)
+
+	// 4. Wait for event watcher to finish after shutdown
+	wg.Wait()
 }

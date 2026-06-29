@@ -22,16 +22,11 @@ func watchEvents(ctx context.Context, apiClient client.APIClient, rt *RouteTable
 	for {
 		select {
 		case event := <-eventChan.Messages:
-			log.Printf(
-				"docker event received: action=%s container=%s",
-				event.Action,
-				event.Actor.ID,
-			)
 
 			switch event.Action {
 
 			case "start", "restart":
-				log.Printf("processing container start/restart: %s", event.Actor.ID)
+				// log.Printf("processing container start/restart: %s", event.Actor.ID)
 
 				c, err := apiClient.ContainerInspect(ctx, event.Actor.ID, client.ContainerInspectOptions{})
 				if err != nil {
