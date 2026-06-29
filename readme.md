@@ -100,8 +100,9 @@ Telescope handles `SIGINT` and `SIGTERM`. On shutdown it stops the event watcher
 
 ```
 .
-├── main.go          # Entry point, wires everything together
-├── proxy.go         # HTTP reverse proxy handler
-├── route_table.go   # RouteTable — thread-safe in-memory route store
-└── docker.go        # Docker client, startup seeding, event watcher
+├── main.go           # Entry point, wires everything together
+├── proxy.go          # HTTP reverse proxy handler
+├── route_table.go    # RouteTable — thread-safe in-memory route store
+├── event_watcher.go  # Event watcher keeps route table up to date
+└── docker.go         # Docker client, startup seeding
 ```
