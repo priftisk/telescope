@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -14,6 +15,17 @@ import (
 func MakeAndServe(targetURL *url.URL, w http.ResponseWriter, r *http.Request) {
 	proxy := httputil.NewSingleHostReverseProxy(targetURL)
 	proxy.ServeHTTP(w, r)
+}
+
+func IsLocalhost(host string) bool {
+	host, _, _ = strings.Cut(host, ":")
+
+	if host == "localhost" {
+		return true
+	}
+
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
 func GetHostAndPath(r *http.Request) (string, string) {

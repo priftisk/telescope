@@ -38,7 +38,7 @@ func VerifyConfig(config *container.Config) (string, string, string) {
 	return hostname, port, path
 }
 
-func ExtractLabels(info container.InspectResponse) (Labels, string) {
+func ExtractLabels(info container.InspectResponse) (Labels, string) { // TODO make a return type
 	var labels Labels = Labels{ProxyHost: "", ProxyPort: "", ProxyPath: ""}
 	if info.Config == nil || info.Config.Labels == nil {
 		return labels, ""

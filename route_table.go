@@ -38,9 +38,16 @@ func (rt *RouteTable) Lookup(host string, path string) (string, bool) {
 	rt.Mutex.RLock()
 	defer rt.Mutex.RUnlock()
 	for _, route := range rt.Routes {
-		slog.Info("Checking", "host", host, "proxhost", route.HostName)
-		if route.URLPath == path {
-			return route.TargetAddress, true
+		// Cannot directly check for host == rt.HostName, because
+		// host will be localhost:XXXX and rt.HostName will be localhost
+		if isLocal := IsLocalhost(host); isLocal == true {
+			if route.URLPath == path && route.HostName == "localhost" {
+				return route.TargetAddress, true
+			}
+		} else {
+			if route.URLPath == path && route.HostName == host {
+				return route.TargetAddress, true
+			}
 		}
 	}
 	return "", false

@@ -15,7 +15,7 @@ services:
     ports:
       - "4444:4444"
     labels:
-      - proxy.host=service_b
+      - proxy.host=localhost
       - proxy.port=4444
       - proxy.path=auth
     # labels:

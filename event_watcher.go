@@ -27,11 +27,10 @@ func watchEvents(ctx context.Context, apiClient client.APIClient, rt *RouteTable
 			switch event.Action {
 
 			case "start", "restart":
-				// slog.Info("processing container start/restart: %s", event.Actor.ID)
 
 				c, err := apiClient.ContainerInspect(ctx, event.Actor.ID, client.ContainerInspectOptions{})
 				if err != nil {
-					slog.Info("inspect failed for container", "container", event.Actor.ID, "error", err)
+					slog.Error("inspect failed for container", "container", event.Actor.ID, "error", err)
 					continue
 				}
 
