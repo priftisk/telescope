@@ -1,0 +1,15 @@
+services:
+  service_a:
+    build: ./service_a
+    ports:
+      - "3333:3333"
+    labels:
+      - proxy.host=service_a
+      - proxy.port=3333
+  service_b:  
+    build: ./service_b
+    ports:
+      - "4444:4444"
+    labels:
+      - proxy.host=service_b
+      - proxy.port=4444

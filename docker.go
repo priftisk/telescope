@@ -8,16 +8,21 @@ import (
 	"github.com/moby/moby/client"
 )
 
+const (
+	ProxyHost = "proxy.host"
+	ProxyPort = "proxy.port"
+)
+
 func getContainerHostAndPort(info container.InspectResponse) (string, string) {
 	if info.Config == nil || info.Config.Labels == nil {
 		return "", ""
 	}
 	var host, port string
-	if host = info.Config.Labels["proxy.host"]; host == "" {
+	if host = info.Config.Labels[ProxyHost]; host == "" {
 		return "", ""
 	}
 
-	if port = info.Config.Labels["proxy.port"]; port == "" {
+	if port = info.Config.Labels[ProxyPort]; port == "" {
 		port = "80"
 	}
 
