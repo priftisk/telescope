@@ -12,8 +12,7 @@ import (
 )
 
 func main() {
-	// ctx, cancel := context.WithCancel(context.Background())
-	// defer cancel()
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 

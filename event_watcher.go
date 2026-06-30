@@ -35,13 +35,12 @@ func watchEvents(ctx context.Context, apiClient client.APIClient, rt *RouteTable
 					continue
 				}
 
-				host, addr := getContainerHostAndPort(c.Container)
-				if host == "" {
+				labels, containerIP := ExtractLabels(c.Container)
+				if labels.IsValid() == false || containerIP == "" {
 					slog.Info("skipping container(no proxy host resolved)", "container", event.Actor.ID)
 					continue
 				}
-
-				rt.Register(host, addr)
+				rt.Register(labels, containerIP)
 
 			case "die", "kill", "stop":
 

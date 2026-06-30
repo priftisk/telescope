@@ -2,47 +2,62 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"log/slog"
 
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 )
 
-const (
-	ProxyHost = "proxy.host"
-	ProxyPort = "proxy.port"
-)
-
-func getContainerHostAndPort(info container.InspectResponse) (string, string) {
-	if info.Config == nil || info.Config.Labels == nil {
-		return "", ""
-	}
-	var host, port string
-	if host = info.Config.Labels[ProxyHost]; host == "" {
-		return "", ""
-	}
-
-	if port = info.Config.Labels[ProxyPort]; port == "" {
-		port = "80"
-	}
-
-	if info.NetworkSettings == nil {
-		return "", ""
-	}
-	networks := info.NetworkSettings.Networks
-	var containerIP string
-
+func GetContainerIP(network *container.NetworkSettings) string {
+	networks := network.Networks
+	var containerIP string = ""
 	// Get the first non-empty IP
 	for _, v := range networks {
 		if v.IPAddress.IsValid() && !v.IPAddress.IsUnspecified() {
 			containerIP = v.IPAddress.String()
-			return host, containerIP + ":" + port
+			break
 		}
 	}
-	return "", ""
+	return containerIP
+}
+
+func VerifyConfig(config *container.Config) (string, string, string) {
+	var hostname, port, path string
+
+	if port = config.Labels[ProxyPort]; port == "" {
+		port = "80"
+	}
+	if hostname = config.Labels[ProxyHost]; hostname == "" {
+		hostname = "localhost"
+	}
+	if path = config.Labels[ProxyPath]; path == "" {
+		path = ""
+	}
+	return hostname, port, path
+}
+
+func ExtractLabels(info container.InspectResponse) (Labels, string) {
+	var labels Labels = Labels{ProxyHost: "", ProxyPort: "", ProxyPath: ""}
+	if info.Config == nil || info.Config.Labels == nil {
+		return labels, ""
+	}
+	hostname, port, path := VerifyConfig(info.Config)
+
+	if info.NetworkSettings == nil {
+		return labels, ""
+	}
+	containerIP := GetContainerIP(info.NetworkSettings)
+	labels.ProxyHost = hostname
+	labels.ProxyPort = port
+	labels.ProxyPath = path
+	fmt.Printf("%+v\n", labels)
+	return labels, containerIP
 }
 
 func onStartup(ctx context.Context, apiClient *client.Client, rt *RouteTable) {
+	slog.Info("Seeding route table")
 	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{All: true})
 	if err != nil {
 		log.Fatal("failed to list containers:", err)
@@ -53,11 +68,11 @@ func onStartup(ctx context.Context, apiClient *client.Client, rt *RouteTable) {
 			log.Printf("inspect failed for %s: %v", c.ID, err)
 			continue
 		}
-		host, addr := getContainerHostAndPort(info.Container)
-
-		if host == "" {
+		labels, containerIP := ExtractLabels(info.Container)
+		if labels.IsValid() == false || containerIP == "" {
 			continue
 		}
-		rt.Register(host, addr)
+
+		rt.Register(labels, containerIP)
 	}
 }

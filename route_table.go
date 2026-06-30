@@ -11,17 +11,18 @@ type RouteTable struct {
 	Mutex  sync.RWMutex
 }
 
-func (rt *RouteTable) Register(host string, target string) {
+func (rt *RouteTable) Register(labels Labels, containerIP string) {
 	rt.Mutex.Lock()
 	defer rt.Mutex.Unlock()
 
 	rt.Routes = append(rt.Routes, Route{
-		HostName:      host,
-		TargetAddress: target,
+		HostName:      labels.ProxyHost,
+		TargetAddress: containerIP + ":" + labels.ProxyPort,
+		URLPath:       labels.ProxyPath,
 	})
 	slog.Info("registered route",
-		"host", host,
-		"addr", target,
+		"host", labels.ProxyHost,
+		"addr", labels.ProxyPort,
 	)
 }
 func (rt *RouteTable) Deregister(host string) {
@@ -33,11 +34,12 @@ func (rt *RouteTable) Deregister(host string) {
 	defer rt.Mutex.Unlock()
 }
 
-func (rt *RouteTable) Lookup(host string) (string, bool) {
+func (rt *RouteTable) Lookup(host string, path string) (string, bool) {
 	rt.Mutex.RLock()
 	defer rt.Mutex.RUnlock()
 	for _, route := range rt.Routes {
-		if route.HostName == host {
+		slog.Info("Checking", "host", host, "proxhost", route.HostName)
+		if route.URLPath == path {
 			return route.TargetAddress, true
 		}
 	}
