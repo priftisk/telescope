@@ -27,21 +27,19 @@ func watchEvents(ctx context.Context, apiClient client.APIClient, rt *RouteTable
 			switch event.Action {
 
 			case "start", "restart":
-				// slog.Info("processing container start/restart: %s", event.Actor.ID)
 
 				c, err := apiClient.ContainerInspect(ctx, event.Actor.ID, client.ContainerInspectOptions{})
 				if err != nil {
-					slog.Info("inspect failed for container", "container", event.Actor.ID, "error", err)
+					slog.Error("inspect failed for container", "container", event.Actor.ID, "error", err)
 					continue
 				}
 
-				host, addr := getContainerHostAndPort(c.Container)
-				if host == "" {
+				labels, containerIP := ExtractLabels(c.Container)
+				if labels.IsValid() == false || containerIP == "" {
 					slog.Info("skipping container(no proxy host resolved)", "container", event.Actor.ID)
 					continue
 				}
-
-				rt.Register(host, addr)
+				rt.Register(labels, containerIP)
 
 			case "die", "kill", "stop":
 

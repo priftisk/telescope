@@ -4,12 +4,20 @@ services:
     ports:
       - "3333:3333"
     labels:
-      - proxy.host=service_a
+      - proxy.host=localhost
       - proxy.port=3333
+      - proxy.path=api
+    # labels:
+    #   - telescope.port=3333
+    #   - telescope.path=api
   service_b:  
     build: ./service_b
     ports:
       - "4444:4444"
     labels:
-      - proxy.host=service_b
+      - proxy.host=localhost
       - proxy.port=4444
+      - proxy.path=auth
+    # labels:
+    #   - telescope.port=4444
+    #   - telescope.path=auth
