@@ -12,11 +12,6 @@ import (
 	"strings"
 )
 
-func MakeAndServe(targetURL *url.URL, w http.ResponseWriter, r *http.Request) {
-	proxy := httputil.NewSingleHostReverseProxy(targetURL)
-	proxy.ServeHTTP(w, r)
-}
-
 func StripPort(host string) string {
 	hostOnly, _, err := net.SplitHostPort(host)
 	if err != nil {
@@ -41,13 +36,41 @@ func GetHostAndPath(r *http.Request) (string, string) {
 	return host, path
 }
 
+func RewriteProxy(targetURL *url.URL, targetPath string, r *http.Request) func(*httputil.ProxyRequest) {
+	return func(pr *httputil.ProxyRequest) {
+
+		pr.SetURL(targetURL)
+		pr.Out.Host = r.Host
+
+		// Strip the routing prefix before forwarding
+		if targetPath != "" {
+			pr.Out.URL.Path = strings.TrimPrefix(r.URL.Path, "/"+targetPath)
+			if pr.Out.URL.Path == "" {
+				pr.Out.URL.Path = "/"
+			}
+			pr.Out.URL.RawPath = ""
+		}
+
+	}
+}
+
+func MakeAndServe(targetURL *url.URL, targetPath string, w http.ResponseWriter, r *http.Request) {
+	proxy := &httputil.ReverseProxy{
+		Rewrite: RewriteProxy(targetURL, targetPath, r),
+	}
+
+	proxy.ServeHTTP(w, r)
+	log.Printf("PROXY %s %s %s → %s",
+		r.Method, r.URL.Path, r.Host, targetURL)
+}
+
 func ProxyHandler(rt *RouteTable) func(http.ResponseWriter, *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		Host, targetPath := GetHostAndPath(r)
-		targetAddress, found := rt.Lookup(Host, targetPath)
+		host, targetPath := GetHostAndPath(r)
+		targetAddress, found := rt.Lookup(host, targetPath)
 		if !found {
-			log.Printf("Proxy fail: %s | %s not found\n", Host, targetPath)
+			log.Printf("Proxy fail: %s | %s not found\n", host, targetPath)
 			w.WriteHeader(502)
 			return
 		}
@@ -58,18 +81,7 @@ func ProxyHandler(rt *RouteTable) func(http.ResponseWriter, *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
-
-		if targetPath != "" {
-			r.URL.Path = strings.TrimPrefix(r.URL.Path, "/"+targetPath)
-			if r.URL.Path == "" {
-				r.URL.Path = "/"
-			}
-			r.URL.RawPath = "" // avoid stale escaped path overriding Path
-		}
-
-		MakeAndServe(targetURL, w, r)
-		log.Printf("PROXY %s %s %s → %s",
-			r.Method, r.URL.Path, r.Host, targetAddress)
+		MakeAndServe(targetURL, targetPath, w, r)
 	}
 }
 
