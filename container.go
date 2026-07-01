@@ -46,25 +46,6 @@ func VerifyConfig(config *container.Config) (string, string, string) {
 	return hostname, port, path
 }
 
-func ExtractContainerData(info container.InspectResponse) (Labels, string) { // TODO make a return type
-	var labels Labels = Labels{ProxyHost: "", ProxyPort: "", ProxyPath: ""}
-	if info.Config == nil || info.Config.Labels == nil {
-		return labels, ""
-	}
-	hostname, port, path := VerifyConfig(info.Config)
-	if port == "" {
-		port = GetContainerPorts(info.NetworkSettings)
-	}
-	if info.NetworkSettings == nil {
-		return labels, ""
-	}
-	containerIP := GetContainerIP(info.NetworkSettings)
-	labels.ProxyHost = hostname
-	labels.ProxyPort = port
-	labels.ProxyPath = path
-	return labels, containerIP
-}
-
 func onStartup(ctx context.Context, apiClient *client.Client, rt *RouteTable) {
 	slog.Info("Seeding route table")
 	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{All: true})
@@ -77,11 +58,10 @@ func onStartup(ctx context.Context, apiClient *client.Client, rt *RouteTable) {
 			log.Printf("inspect failed for %s: %v", c.ID, err)
 			continue
 		}
-		labels, containerIP := ExtractContainerData(info.Container)
-		if labels.IsValid() == false || containerIP == "" {
+		container, valid := ExtractContainerData(info.Container)
+		if !valid {
 			continue
 		}
-
-		rt.Register(labels, containerIP)
+		rt.Register(container)
 	}
 }

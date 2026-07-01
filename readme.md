@@ -52,10 +52,11 @@ services:
 |---|---|---|
 | `proxy.host` | Yes | The `Host` header value Telescope will match incoming requests against |
 | `proxy.port` | No | The port your app listens on inside the container. Defaults to `80` |
-
+| `proxy.path` | No | The request path prefix will be used to proxy to the relevant service.|
 ## Routing requests
 
 Telescope matches the `Host` HTTP header of incoming requests against registered routes.
+Be more specific by adding a `proxy.path`, so requests from the same host can match with multiple routes.
 
 In development, add entries to `/etc/hosts` to avoid setting headers manually:
 
@@ -87,8 +88,8 @@ curl http://localhost:8901/routes
 
 ```json
 [
-  { "host": "myapp", "target": "172.17.0.3:8080" },
-  { "host": "api",   "target": "172.17.0.4:3000" }
+  { "hostname": "myapp", "address": "172.17.0.3:8080",  path="auth"},
+  { "hostname": "api",   "address": "172.17.0.4:3000",  path="api" }
 ]
 ```
 

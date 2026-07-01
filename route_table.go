@@ -11,13 +11,13 @@ type RouteTable struct {
 	Mutex  sync.RWMutex
 }
 
-func (rt *RouteTable) Register(labels Labels, containerIP string) {
+func (rt *RouteTable) Register(container ContainerInfo) {
 	rt.Mutex.Lock()
 	defer rt.Mutex.Unlock()
-
+	labels := container.Labels
 	rt.Routes = append(rt.Routes, Route{
 		HostName:      labels.ProxyHost,
-		TargetAddress: containerIP + ":" + labels.ProxyPort,
+		TargetAddress: container.ContainerID + ":" + labels.ProxyPort,
 		URLPath:       labels.ProxyPath,
 	})
 	slog.Info("registered route",

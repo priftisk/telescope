@@ -41,9 +41,9 @@ func GetHostAndPath(r *http.Request) (string, string) {
 	return targetHost, targetPath
 }
 
-func runProxy(ctx context.Context, rt *RouteTable) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+func ProxyHandler(rt *RouteTable) func(http.ResponseWriter, *http.Request) {
+
+	return func(w http.ResponseWriter, r *http.Request) {
 		Host, targetPath := GetHostAndPath(r)
 		targetAddress, found := rt.Lookup(Host, targetPath)
 		if !found {
@@ -68,7 +68,12 @@ func runProxy(ctx context.Context, rt *RouteTable) {
 
 		MakeAndServe(targetURL, w, r)
 		slog.Info("proxied", "host", r.Host, "address", targetAddress, "path", r.URL.Path)
-	})
+	}
+}
+
+func RunProxy(ctx context.Context, rt *RouteTable) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", ProxyHandler(rt))
 	mux.HandleFunc("GET /routes", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
