@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"log/slog"
 
@@ -23,12 +22,21 @@ func GetContainerIP(network *container.NetworkSettings) string {
 	return containerIP
 }
 
+func GetContainerPorts(network *container.NetworkSettings) string {
+	ports := network.Ports
+	if len(ports) == 1 {
+		for port := range ports {
+			return port.Port()
+		}
+	}
+
+	return ""
+}
+
 func VerifyConfig(config *container.Config) (string, string, string) {
 	var hostname, port, path string
 
-	if port = config.Labels[ProxyPort]; port == "" {
-		port = "80"
-	}
+	port = config.Labels[ProxyPort]
 	if hostname = config.Labels[ProxyHost]; hostname == "" {
 		hostname = "localhost"
 	}
@@ -38,13 +46,15 @@ func VerifyConfig(config *container.Config) (string, string, string) {
 	return hostname, port, path
 }
 
-func ExtractLabels(info container.InspectResponse) (Labels, string) { // TODO make a return type
+func ExtractContainerData(info container.InspectResponse) (Labels, string) { // TODO make a return type
 	var labels Labels = Labels{ProxyHost: "", ProxyPort: "", ProxyPath: ""}
 	if info.Config == nil || info.Config.Labels == nil {
 		return labels, ""
 	}
 	hostname, port, path := VerifyConfig(info.Config)
-
+	if port == "" {
+		port = GetContainerPorts(info.NetworkSettings)
+	}
 	if info.NetworkSettings == nil {
 		return labels, ""
 	}
@@ -52,7 +62,6 @@ func ExtractLabels(info container.InspectResponse) (Labels, string) { // TODO ma
 	labels.ProxyHost = hostname
 	labels.ProxyPort = port
 	labels.ProxyPath = path
-	fmt.Printf("%+v\n", labels)
 	return labels, containerIP
 }
 
@@ -68,7 +77,7 @@ func onStartup(ctx context.Context, apiClient *client.Client, rt *RouteTable) {
 			log.Printf("inspect failed for %s: %v", c.ID, err)
 			continue
 		}
-		labels, containerIP := ExtractLabels(info.Container)
+		labels, containerIP := ExtractContainerData(info.Container)
 		if labels.IsValid() == false || containerIP == "" {
 			continue
 		}

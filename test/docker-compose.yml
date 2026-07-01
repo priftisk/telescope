@@ -5,7 +5,7 @@ services:
       - "3333:3333"
     labels:
       - proxy.host=localhost
-      - proxy.port=3333
+      # - proxy.port=3333
       - proxy.path=api
     # labels:
     #   - telescope.port=3333

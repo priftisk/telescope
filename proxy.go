@@ -44,8 +44,8 @@ func GetHostAndPath(r *http.Request) (string, string) {
 func runProxy(ctx context.Context, rt *RouteTable) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		targetHost, targetPath := GetHostAndPath(r)
-		targetAddress, found := rt.Lookup(targetHost, targetPath)
+		Host, targetPath := GetHostAndPath(r)
+		targetAddress, found := rt.Lookup(Host, targetPath)
 		if !found {
 			w.WriteHeader(502)
 			return
