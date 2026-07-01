@@ -1,9 +1,9 @@
 package main
 
 import (
+	"log"
 	"log/slog"
 	"slices"
-	"strings"
 	"sync"
 )
 
@@ -16,17 +16,21 @@ type RouteTable struct {
 func (rt *RouteTable) Register(container ContainerInfo) {
 	rt.Mutex.Lock()
 	defer rt.Mutex.Unlock()
-	labels := container.Labels
-	rt.Routes = append(rt.Routes, Route{
-		HostName:      labels.ProxyHost,
-		TargetAddress: container.ContainerIPAddr + ":" + labels.ProxyPort,
-		URLPath:       labels.ProxyPath,
-	})
-	slog.Info("registered route",
-		"host", labels.ProxyHost,
-		"addr", labels.ProxyPort,
-	)
+
+	new_route := NewRoute(container)
+	rt.Routes = append(rt.Routes, new_route)
+
+	if rt.HostIndex == nil {
+		rt.HostIndex = make(map[string][]*Route)
+	}
+
+	lastIdx := len(rt.Routes) - 1
+	rt.HostIndex[new_route.HostName] = append(rt.HostIndex[new_route.HostName], &rt.Routes[lastIdx])
+
+	log.Printf("Registered: host=%s addr=%s", container.Labels.ProxyHost, container.Labels.ProxyPort)
+
 }
+
 func (rt *RouteTable) Deregister(host string) {
 	rt.Mutex.Lock()
 	rt.Routes = slices.DeleteFunc(rt.Routes, func(r Route) bool {
@@ -43,20 +47,33 @@ func (rt *RouteTable) Lookup(host string, path string) (string, bool) {
 	// Strip port from host for comparison (e.g., "localhost:8901" -> "localhost")
 	hostOnly := StripPort(host)
 
-	for _, route := range rt.Routes {
+	candidates := rt.HostIndex[hostOnly]
 
-		if !HostMatches(hostOnly, route.HostName) {
-			continue
-		}
-
-		// Match path (if route has a path specified)
-		if route.URLPath != "" && route.URLPath != "/" {
-			if !strings.HasPrefix(path, route.URLPath) {
-				continue
+	if len(candidates) == 0 { // Not exact host match so check if host matches pattern
+		for host, routes := range rt.HostIndex {
+			if HostMatches(hostOnly, host) {
+				candidates = routes
+				break
 			}
 		}
+	}
+	var bestMatch *Route
+	bestPathLen := -1
 
-		return route.TargetAddress, true
+	for _, route := range candidates { // Match based on closest path length
+		routePath := route.URLPath
+		if routePath == "" {
+			routePath = "/"
+		}
+
+		if pathMatches(path, routePath) && len(routePath) > bestPathLen {
+			bestMatch = route
+			bestPathLen = len(routePath)
+		}
+	}
+
+	if bestMatch != nil {
+		return bestMatch.TargetAddress, true
 	}
 
 	return "", false

@@ -26,21 +26,6 @@ func StripPort(host string) string {
 	return hostOnly
 }
 
-func HostMatches(requestHost, routeHost string) bool {
-	// Exact match
-	if requestHost == routeHost {
-		return true
-	}
-
-	// Wildcard match (e.g., "*.example.com")
-	if strings.HasPrefix(routeHost, "*.") {
-		domain := routeHost[2:] // Remove "*."
-		return strings.HasSuffix(requestHost, "."+domain) || requestHost == domain
-	}
-
-	return false
-}
-
 func GetHostAndPath(r *http.Request) (string, string) {
 	var targetHost, targetPath string
 	targetHost = r.Host

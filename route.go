@@ -1,7 +1,54 @@
 package main
 
+import "strings"
+
 type Route struct {
 	HostName      string `json:"hostname"`
 	TargetAddress string `json:"address"`
 	URLPath       string `json:"url_path"`
+}
+
+func NewRoute(container ContainerInfo) Route {
+
+	return Route{
+		HostName:      container.Labels.ProxyHost,
+		TargetAddress: container.ContainerIPAddr + ":" + container.Labels.ProxyPort,
+		URLPath:       container.Labels.ProxyPath,
+	}
+}
+func PatternHostMatches(requestHost, routeHost string) bool {
+
+	// Wildcard match (e.g., "*.example.com")
+	if strings.HasPrefix(routeHost, "*.") {
+		domain := routeHost[2:] // Remove "*."
+		return strings.HasSuffix(requestHost, "."+domain) || requestHost == domain
+	}
+
+	return false
+}
+
+func pathMatches(requestPath, routePath string) bool {
+	// Exact match
+	if requestPath == routePath {
+		return true
+	}
+
+	if routePath == "/" {
+		return true
+	}
+
+	if !strings.HasPrefix(requestPath, routePath) {
+		return false
+	}
+
+	return len(requestPath) == len(routePath) || // Paths are same
+		requestPath[len(routePath)] == '/' // Or next char after path is "/"
+
+}
+
+func HostMatches(requestHost, routeHost string) bool {
+	if requestHost == routeHost {
+		return true
+	}
+	return PatternHostMatches(requestHost, routeHost)
 }

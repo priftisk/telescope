@@ -6,9 +6,6 @@ services:
     labels:
       - proxy.host=localhost
       - proxy.path=api
-    # labels:
-    #   - telescope.port=3333
-    #   - telescope.path=api
   service_b:  
     build: ./service_b
     ports:
@@ -16,6 +13,4 @@ services:
     labels:
       - proxy.host=localhost
       - proxy.port=4444
-    # labels:
-    #   - telescope.port=4444
-    #   - telescope.path=auth
+      - proxy.path=auth
