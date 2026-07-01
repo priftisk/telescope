@@ -13,4 +13,4 @@ services:
     labels:
       - proxy.host=localhost
       - proxy.port=4444
-      - proxy.path=auth
+      # - proxy.path=auth

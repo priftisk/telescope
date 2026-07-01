@@ -41,7 +41,7 @@ func VerifyConfig(config *container.Config) (string, string, string) {
 		hostname = "localhost"
 	}
 	if path = config.Labels[ProxyPath]; path == "" {
-		path = ""
+		path = "/"
 	}
 	return hostname, port, path
 }

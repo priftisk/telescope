@@ -20,23 +20,25 @@ func MakeAndServe(targetURL *url.URL, w http.ResponseWriter, r *http.Request) {
 func StripPort(host string) string {
 	hostOnly, _, err := net.SplitHostPort(host)
 	if err != nil {
-		// If no port, SplitHostPort returns an error
+		// No port present.
 		return host
 	}
 	return hostOnly
 }
 
 func GetHostAndPath(r *http.Request) (string, string) {
-	var targetHost, targetPath string
-	targetHost = r.Host
+	host := StripPort(r.Host)
 
-	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(parts) == 0 {
-		targetPath = ""
-	} else {
-		targetPath = parts[0]
+	path := strings.Trim(r.URL.Path, "/")
+	if path == "" {
+		return host, "/"
 	}
-	return targetHost, targetPath
+
+	if i := strings.IndexByte(path, '/'); i != -1 {
+		path = path[:i]
+	}
+
+	return host, path
 }
 
 func ProxyHandler(rt *RouteTable) func(http.ResponseWriter, *http.Request) {
@@ -45,7 +47,7 @@ func ProxyHandler(rt *RouteTable) func(http.ResponseWriter, *http.Request) {
 		Host, targetPath := GetHostAndPath(r)
 		targetAddress, found := rt.Lookup(Host, targetPath)
 		if !found {
-			log.Printf("Proxy fail: %s not found\n", targetAddress)
+			log.Printf("Proxy fail: %s | %s not found\n", Host, targetPath)
 			w.WriteHeader(502)
 			return
 		}

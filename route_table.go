@@ -57,6 +57,7 @@ func (rt *RouteTable) Lookup(host string, path string) (string, bool) {
 			}
 		}
 	}
+
 	var bestMatch *Route
 	bestPathLen := -1
 

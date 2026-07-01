@@ -51,8 +51,8 @@ services:
 | Label | Required | Description |
 |---|---|---|
 | `proxy.host` | Yes | The `Host` header value Telescope will match incoming requests against |
-| `proxy.port` | No | The port your app listens on inside the container. Defaults to `80` |
-| `proxy.path` | No | The request path prefix will be used to proxy to the relevant service.|
+| `proxy.port` | No | The port your app listens on inside the container. Use if your app exposes multiple ports.  |
+| `proxy.path` | No | Optional path prefix to match requests against. When set, only requests starting with this path are routed to the container.|
 ## Routing requests
 
 Telescope matches the `Host` HTTP header of incoming requests against registered routes.
