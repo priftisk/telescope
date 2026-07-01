@@ -31,12 +31,13 @@ func (rt *RouteTable) Register(container ContainerInfo) {
 
 }
 
-func (rt *RouteTable) Deregister(host string) {
+func (rt *RouteTable) Deregister(containerID string) {
 	rt.Mutex.Lock()
 	rt.Routes = slices.DeleteFunc(rt.Routes, func(r Route) bool {
-		return r.HostName == host
+		return r.ContainerID == containerID
 	})
-	slog.Info("deregistering container route", "container", host)
+
+	slog.Info("deregistering container route", "container", containerID)
 	defer rt.Mutex.Unlock()
 }
 

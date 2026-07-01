@@ -3,6 +3,7 @@ package main
 import "strings"
 
 type Route struct {
+	ContainerID   string `json:"container_id"`
 	HostName      string `json:"hostname"`
 	TargetAddress string `json:"address"`
 	URLPath       string `json:"url_path"`
@@ -11,6 +12,7 @@ type Route struct {
 func NewRoute(container ContainerInfo) Route {
 
 	return Route{
+		ContainerID:   container.ContainerID,
 		HostName:      container.Labels.ProxyHost,
 		TargetAddress: container.ContainerIPAddr + ":" + container.Labels.ProxyPort,
 		URLPath:       container.Labels.ProxyPath,
