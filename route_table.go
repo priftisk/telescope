@@ -3,12 +3,14 @@ package main
 import (
 	"log/slog"
 	"slices"
+	"strings"
 	"sync"
 )
 
 type RouteTable struct {
-	Routes []Route
-	Mutex  sync.RWMutex
+	Routes    []Route
+	Mutex     sync.RWMutex
+	HostIndex map[string][]*Route
 }
 
 func (rt *RouteTable) Register(container ContainerInfo) {
@@ -17,7 +19,7 @@ func (rt *RouteTable) Register(container ContainerInfo) {
 	labels := container.Labels
 	rt.Routes = append(rt.Routes, Route{
 		HostName:      labels.ProxyHost,
-		TargetAddress: container.ContainerID + ":" + labels.ProxyPort,
+		TargetAddress: container.ContainerIPAddr + ":" + labels.ProxyPort,
 		URLPath:       labels.ProxyPath,
 	})
 	slog.Info("registered route",
@@ -37,19 +39,26 @@ func (rt *RouteTable) Deregister(host string) {
 func (rt *RouteTable) Lookup(host string, path string) (string, bool) {
 	rt.Mutex.RLock()
 	defer rt.Mutex.RUnlock()
+
+	// Strip port from host for comparison (e.g., "localhost:8901" -> "localhost")
+	hostOnly := StripPort(host)
+
 	for _, route := range rt.Routes {
-		// Cannot directly check for host == rt.HostName, because
-		// host will be localhost:XXXX and rt.HostName will be localhost
-		if isLocal := IsLocalhost(host); isLocal == true {
-			if route.URLPath == path && route.HostName == "localhost" {
-				return route.TargetAddress, true
-			}
-		} else {
-			if route.URLPath == path && route.HostName == host {
-				return route.TargetAddress, true
+
+		if !HostMatches(hostOnly, route.HostName) {
+			continue
+		}
+
+		// Match path (if route has a path specified)
+		if route.URLPath != "" && route.URLPath != "/" {
+			if !strings.HasPrefix(path, route.URLPath) {
+				continue
 			}
 		}
+
+		return route.TargetAddress, true
 	}
+
 	return "", false
 }
 

@@ -17,15 +17,28 @@ func MakeAndServe(targetURL *url.URL, w http.ResponseWriter, r *http.Request) {
 	proxy.ServeHTTP(w, r)
 }
 
-func IsLocalhost(host string) bool {
-	host, _, _ = strings.Cut(host, ":")
+func StripPort(host string) string {
+	hostOnly, _, err := net.SplitHostPort(host)
+	if err != nil {
+		// If no port, SplitHostPort returns an error
+		return host
+	}
+	return hostOnly
+}
 
-	if host == "localhost" {
+func HostMatches(requestHost, routeHost string) bool {
+	// Exact match
+	if requestHost == routeHost {
 		return true
 	}
 
-	ip := net.ParseIP(host)
-	return ip != nil && ip.IsLoopback()
+	// Wildcard match (e.g., "*.example.com")
+	if strings.HasPrefix(routeHost, "*.") {
+		domain := routeHost[2:] // Remove "*."
+		return strings.HasSuffix(requestHost, "."+domain) || requestHost == domain
+	}
+
+	return false
 }
 
 func GetHostAndPath(r *http.Request) (string, string) {
@@ -47,6 +60,7 @@ func ProxyHandler(rt *RouteTable) func(http.ResponseWriter, *http.Request) {
 		Host, targetPath := GetHostAndPath(r)
 		targetAddress, found := rt.Lookup(Host, targetPath)
 		if !found {
+			log.Printf("Proxy fail: %s not found\n", targetAddress)
 			w.WriteHeader(502)
 			return
 		}
@@ -67,21 +81,26 @@ func ProxyHandler(rt *RouteTable) func(http.ResponseWriter, *http.Request) {
 		}
 
 		MakeAndServe(targetURL, w, r)
-		slog.Info("proxied", "host", r.Host, "address", targetAddress, "path", r.URL.Path)
+		log.Printf("PROXY %s %s %s → %s",
+			r.Method, r.URL.Path, r.Host, targetAddress)
 	}
 }
 
-func RunProxy(ctx context.Context, rt *RouteTable) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", ProxyHandler(rt))
-	mux.HandleFunc("GET /routes", func(w http.ResponseWriter, r *http.Request) {
+func RoutesHandler(rt *RouteTable) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
 		routes := rt.List()
 		// fmt.Println(routes)
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(routes)
-	})
+	}
+}
+
+func RunProxy(ctx context.Context, rt *RouteTable) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", ProxyHandler(rt))
+	mux.HandleFunc("GET /routes", RoutesHandler(rt))
 
 	server := &http.Server{
 		Addr:    ":8901",

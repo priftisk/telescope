@@ -39,7 +39,7 @@ func main() {
 	})
 
 	// 3. Start HTTP proxy — blocking, keeps main alive
-	// when ctx is cancelled, runProxy calls server.Shutdown
+	// when ctx is cancelled, RunProxy calls server.Shutdown
 	RunProxy(ctx, rt)
 
 	// 4. Wait for event watcher to finish after shutdown
