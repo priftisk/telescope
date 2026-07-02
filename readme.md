@@ -88,8 +88,8 @@ curl http://localhost:8901/routes
 
 ```json
 [
-  { "hostname": "myapp", "address": "172.17.0.3:8080",  path="auth"},
-  { "hostname": "api",   "address": "172.17.0.4:3000",  path="api" }
+  { "hostname": "myapp", "address": "172.17.0.3:8080",  "path"="auth"},
+  { "hostname": "api",   "address": "172.17.0.4:3000",  "path"="api" }
 ]
 ```
 
