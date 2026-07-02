@@ -1,10 +1,11 @@
-package main
+package router
 
 import (
 	"log"
 	"log/slog"
 	"slices"
 	"sync"
+	"telescope/internal/container"
 )
 
 type RouteTable struct {
@@ -13,7 +14,7 @@ type RouteTable struct {
 	HostIndex map[string][]*Route
 }
 
-func (rt *RouteTable) Register(container ContainerInfo) {
+func (rt *RouteTable) Register(container container.ContainerInfo) {
 	rt.Mutex.Lock()
 	defer rt.Mutex.Unlock()
 
