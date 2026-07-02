@@ -16,9 +16,7 @@ import (
 )
 
 func (s *Server) ProxyHandler(w http.ResponseWriter, r *http.Request) {
-	// if IsFromDashboard(r) {
-	// 	w.WriteHeader(200)
-	// }
+
 	host, targetPath := router.GetHostAndPath(r)
 	targetAddress, found := s.routeTable.Lookup(host, targetPath)
 	if !found {

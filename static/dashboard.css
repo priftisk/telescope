@@ -170,50 +170,70 @@ h2::before { content: "▓▓ "; color: var(--phosphor-dim); }
   box-shadow: 0 0 10px var(--phosphor-glow);
 }
 .refresh-btn::before { content: "↻ "; }
-
 .route-card {
   background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-left: 3px solid var(--phosphor-dim);
-  padding: 0.85rem 1.25rem;
-  margin-bottom: 0.6rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  transition: border-color 0.15s ease;
+border: 1px solid var(--panel-border);
+border-left: 3px solid var(--phosphor-dim);
+padding: 0.85rem 1.25rem;
+margin-bottom: 0.6rem;
+display: flex;
+flex-direction: column;
+gap: 0.4rem;
+transition: border-color 0.15s ease;
 }
 .route-card:hover {
-  border-left-color: var(--amber);
+border-left-color: var(--amber);
 }
-
+.route-main {
+display: flex;
+align-items: center;
+gap: 1rem;
+}
 .route-host {
-  font-weight: bold;
-  color: var(--phosphor);
-  min-width: 150px;
-  letter-spacing: 0.03em;
+font-weight: bold;
+color: var(--phosphor);
+min-width: 150px;
+letter-spacing: 0.03em;
 }
 .route-host::before { content: "● "; color: var(--amber); font-size: 0.8em; }
-
 .route-path {
-  background: rgba(61, 255, 110, 0.08);
-  border: 1px solid var(--panel-border);
-  padding: 0.2rem 0.7rem;
-  font-size: 0.8rem;
-  color: var(--phosphor-dim);
+background: rgba(61, 255, 110, 0.08);
+border: 1px solid var(--panel-border);
+padding: 0.2rem 0.7rem;
+font-size: 0.8rem;
+color: var(--phosphor-dim);
 }
-
 .route-arrow { color: var(--phosphor-dim); font-size: 1.1rem; }
-
 .route-target {
-  color: var(--amber);
-  font-size: 0.875rem;
+color: var(--amber);
+font-size: 0.875rem;
 }
-
+.route-meta {
+display: flex;
+align-items: center;
+gap: 1rem;
+padding-left: 1.7rem;
+font-size: 0.75rem;
+color: var(--phosphor-dim);
+}
+.route-container-name::before {
+  content: "container: ";
+  opacity: 0.6;
+}
+.route-container-id {
+  font-family: monospace;
+  opacity: 0.7;
+}
+.route-container-id::before {
+  content: "id: ";
+  opacity: 0.6;
+  font-family: inherit;
+}
 .empty {
-  text-align: center;
-  color: var(--phosphor-dim);
-  padding: 3rem;
-  border: 1px dashed var(--panel-border);
+text-align: center;
+color: var(--phosphor-dim);
+padding: 3rem;
+border: 1px dashed var(--panel-border);
 }
 .empty p:first-child::before { content: "[ "; }
 .empty p:first-child::after { content: " ]"; }

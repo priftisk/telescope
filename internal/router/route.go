@@ -9,6 +9,7 @@ import (
 
 type Route struct {
 	ContainerID   string `json:"container_id"`
+	ContainerName string `json:"container_name"`
 	HostName      string `json:"hostname"`
 	TargetAddress string `json:"address"`
 	URLPath       string `json:"url_path"`
@@ -42,6 +43,7 @@ func NewRoute(container container.ContainerInfo) Route {
 
 	return Route{
 		ContainerID:   container.ContainerID,
+		ContainerName: container.ContainerName,
 		HostName:      container.Labels.ProxyHost,
 		TargetAddress: container.ContainerIPAddr + ":" + container.Labels.ProxyPort,
 		URLPath:       container.Labels.ProxyPath,
@@ -49,7 +51,7 @@ func NewRoute(container container.ContainerInfo) Route {
 }
 func PatternHostMatches(requestHost, routeHost string) bool {
 
-	// Wildcard match (e.g., "*.example.com")
+	// Wildcard match ("*.example.com")
 	if strings.HasPrefix(routeHost, "*.") {
 		domain := routeHost[2:] // Remove "*."
 		return strings.HasSuffix(requestHost, "."+domain) || requestHost == domain

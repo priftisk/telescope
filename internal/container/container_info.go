@@ -4,13 +4,15 @@ import "github.com/moby/moby/api/types/container"
 
 type ContainerInfo struct {
 	ContainerID     string
+	ContainerName   string
 	ContainerIPAddr string
 	Labels          Labels
 }
 
 func ExtractContainerData(info container.InspectResponse) (ContainerInfo, bool) {
 	containerInfo := ContainerInfo{
-		ContainerID: info.ID,
+		ContainerID:   info.ID,
+		ContainerName: info.Name,
 	}
 
 	if info.Config == nil || info.Config.Labels == nil {

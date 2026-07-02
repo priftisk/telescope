@@ -36,7 +36,8 @@ func MakeAndServe(targetURL *url.URL, targetPath string, w http.ResponseWriter, 
 	log.Printf("PROXY %s %s %s → %s",
 		r.Method, r.URL.Path, r.Host, targetURL)
 }
-func IsFromDashboard(r *http.Request) bool {
-	cookie, err := r.Cookie("telescope_dashboard")
-	return err == nil && cookie.Value == "1"
-}
+
+// func IsFromDashboard(r *http.Request) bool {
+// 	cookie, err := r.Cookie("telescope_dashboard")
+// 	return err == nil && cookie.Value == "1"
+// }

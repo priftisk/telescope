@@ -35,12 +35,18 @@
         {{if .Routes}}
             {{range .Routes}}
 <div class="route-card">
+<div class="route-main">
 <span class="route-host">{{.HostName}}</span>
                 {{if .URLPath}}
 <span class="route-path">{{.URLPath}}</span>
                 {{end}}
 <span class="route-arrow">→</span>
 <span class="route-target">{{.TargetAddress}}</span>
+</div>
+<div class="route-meta">
+<span class="route-container-name">{{.ContainerName}}</span>
+<span class="route-container-id">{{.ContainerID}}</span>
+</div>
 </div>
             {{end}}
         {{else}}
