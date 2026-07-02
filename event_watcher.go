@@ -8,7 +8,7 @@ import (
 	"github.com/moby/moby/client"
 )
 
-func watchEvents(ctx context.Context, apiClient client.APIClient, rt *RouteTable) {
+func (s *Server) watchEvents(ctx context.Context) {
 	filterArgs := client.Filters{}
 	filterArgs.Add("type", "container")
 
@@ -18,7 +18,7 @@ func watchEvents(ctx context.Context, apiClient client.APIClient, rt *RouteTable
 
 	log.Println("starting docker event watcher")
 
-	eventChan := apiClient.Events(ctx, eventOptions)
+	eventChan := s.dockerClient.Events(ctx, eventOptions)
 
 	for {
 		select {
@@ -28,7 +28,7 @@ func watchEvents(ctx context.Context, apiClient client.APIClient, rt *RouteTable
 
 			case "start", "restart":
 
-				c, err := apiClient.ContainerInspect(ctx, event.Actor.ID, client.ContainerInspectOptions{})
+				c, err := s.dockerClient.ContainerInspect(ctx, event.Actor.ID, client.ContainerInspectOptions{})
 				if err != nil {
 					slog.Error("inspect failed for container", "container", event.Actor.ID, "error", err)
 					continue
@@ -39,11 +39,11 @@ func watchEvents(ctx context.Context, apiClient client.APIClient, rt *RouteTable
 					slog.Info("skipping container(no proxy host resolved)", "container", event.Actor.ID)
 					continue
 				}
-				rt.Register(container)
+				s.routeTable.Register(container)
 
 			case "die", "kill", "stop":
 
-				rt.Deregister(event.Actor.ID)
+				s.routeTable.Deregister(event.Actor.ID)
 			}
 
 		case err := <-eventChan.Err:

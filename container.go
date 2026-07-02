@@ -1,12 +1,7 @@
 package main
 
 import (
-	"context"
-	"log"
-	"log/slog"
-
 	"github.com/moby/moby/api/types/container"
-	"github.com/moby/moby/client"
 )
 
 func GetContainerIP(network *container.NetworkSettings) string {
@@ -44,24 +39,4 @@ func VerifyConfig(config *container.Config) (string, string, string) {
 		path = "/"
 	}
 	return hostname, port, path
-}
-
-func onStartup(ctx context.Context, apiClient *client.Client, rt *RouteTable) {
-	slog.Info("Seeding route table")
-	containers, err := apiClient.ContainerList(ctx, client.ContainerListOptions{All: true})
-	if err != nil {
-		log.Fatal("failed to list containers:", err)
-	}
-	for _, c := range containers.Items {
-		info, err := apiClient.ContainerInspect(ctx, c.ID, client.ContainerInspectOptions{})
-		if err != nil {
-			log.Printf("inspect failed for %s: %v", c.ID, err)
-			continue
-		}
-		container, valid := ExtractContainerData(info.Container)
-		if !valid {
-			continue
-		}
-		rt.Register(container)
-	}
 }
