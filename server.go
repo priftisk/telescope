@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"log/slog"
@@ -25,12 +24,13 @@ type Server struct {
 
 	// Internal state
 	httpServer *http.Server
+	uiServer   *http.Server
 	wg         sync.WaitGroup
 }
 
 func NewServer() (*Server, error) {
 	// Initialize logger
-	InitLogger()
+	// InitLogger()
 
 	// Create Docker client
 	apiClient, err := client.New(
@@ -73,17 +73,6 @@ func GetHostAndPath(r *http.Request) (string, string) {
 	return host, path
 }
 
-func RoutesHandler(rt *RouteTable) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
-		routes := rt.List()
-		// fmt.Println(routes)
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(routes)
-	}
-}
-
 func (s *Server) onStartup(ctx context.Context) error {
 	slog.Info("Seeding route table")
 	containers, err := s.dockerClient.ContainerList(ctx, client.ContainerListOptions{All: true})
@@ -109,11 +98,15 @@ func (s *Server) serve(ctx context.Context) error {
 	mux := http.NewServeMux()
 
 	// API endpoints
-	mux.HandleFunc("GET /routes", RoutesHandler(s.routeTable))
-	// mux.HandleFunc("GET /health", s.handleHealth)
+	mux.HandleFunc("GET /routes", s.RoutesHandler)
+
+	// Dashboard UI
+	mux.HandleFunc("GET /dashboard", s.DashboardHandler)
+	mux.Handle("GET /static/", http.StripPrefix("/static/",
+		http.FileServer(http.Dir("./static"))))
 
 	// Proxy - catch-all must be registered last
-	mux.HandleFunc("/", ProxyHandler(s.routeTable))
+	mux.HandleFunc("/", s.ProxyHandler)
 
 	s.httpServer = &http.Server{
 		Addr:    ":8901",
@@ -159,11 +152,9 @@ func (s *Server) Run() error {
 	}
 
 	// 2. Launch event watcher in background
-	s.wg.Add(1)
-	go func() {
-		defer s.wg.Done()
+	s.wg.Go(func() {
 		s.watchEvents(ctx)
-	}()
+	})
 
 	// 3. Start HTTP server — blocking, keeps main alive
 	if err := s.serve(ctx); err != nil {

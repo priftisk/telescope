@@ -28,6 +28,7 @@ func RewriteProxy(targetURL *url.URL, targetPath string, r *http.Request) func(*
 }
 
 func MakeAndServe(targetURL *url.URL, targetPath string, w http.ResponseWriter, r *http.Request) {
+
 	proxy := &httputil.ReverseProxy{
 		Rewrite: RewriteProxy(targetURL, targetPath, r),
 	}
@@ -36,24 +37,28 @@ func MakeAndServe(targetURL *url.URL, targetPath string, w http.ResponseWriter, 
 	log.Printf("PROXY %s %s %s → %s",
 		r.Method, r.URL.Path, r.Host, targetURL)
 }
+func IsFromDashboard(r *http.Request) bool {
+	cookie, err := r.Cookie("telescope_dashboard")
+	return err == nil && cookie.Value == "1"
+}
 
-func ProxyHandler(rt *RouteTable) func(http.ResponseWriter, *http.Request) {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		host, targetPath := GetHostAndPath(r)
-		targetAddress, found := rt.Lookup(host, targetPath)
-		if !found {
-			log.Printf("Proxy fail: %s | %s not found\n", host, targetPath)
-			w.WriteHeader(502)
-			return
-		}
-
-		targetURL, err := url.Parse("http://" + targetAddress)
-		if err != nil {
-			slog.Error(err.Error())
-			w.WriteHeader(500)
-			return
-		}
-		MakeAndServe(targetURL, targetPath, w, r)
+func (s *Server) ProxyHandler(w http.ResponseWriter, r *http.Request) {
+	// if IsFromDashboard(r) {
+	// 	w.WriteHeader(200)
+	// }
+	host, targetPath := GetHostAndPath(r)
+	targetAddress, found := s.routeTable.Lookup(host, targetPath)
+	if !found {
+		log.Printf("Proxy fail: %s | %s not found\n", host, targetPath)
+		w.WriteHeader(502)
+		return
 	}
+
+	targetURL, err := url.Parse("http://" + targetAddress)
+	if err != nil {
+		slog.Error(err.Error())
+		w.WriteHeader(500)
+		return
+	}
+	MakeAndServe(targetURL, targetPath, w, r)
 }

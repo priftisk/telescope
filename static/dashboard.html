@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Telescope Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/static/dashboard.css" />
+<link rel="icon" href="data:," />
+<script>
+  document.cookie = 'telescope_dashboard=1; path=/; SameSite=Strict';
+</script>
+</head>
+<body>
+<div class="container">
+<div class="terminal-header">
+<span>TELESCOPE-OS v{{.Version}} :: TRACKING CONSOLE</span>
+<span>SESSION ACTIVE</span>
+</div>
+<h1>TELESCOPE<span class="cursor">&nbsp;</span></h1>
+<p class="subtitle">Dynamic Docker Reverse Proxy</p>
+<div class="stats">
+<div class="stat-card">
+<div class="stat-label">Active Routes</div>
+<div class="stat-value">{{.TotalRoutes}}</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">Uptime</div>
+<div class="stat-value" style="font-size: 1.5rem;">{{.Uptime}}</div>
+</div>
+<div class="stat-card">
+<div class="stat-label">Version</div>
+<div class="stat-value" style="font-size: 1.5rem;">{{.Version}}</div>
+</div>
+</div>
+<button class="refresh-btn" onclick="location.reload()">REFRESH</button>
+<h2>Routes</h2>
+        {{if .Routes}}
+            {{range .Routes}}
+<div class="route-card">
+<span class="route-host">{{.HostName}}</span>
+                {{if .URLPath}}
+<span class="route-path">{{.URLPath}}</span>
+                {{end}}
+<span class="route-arrow">→</span>
+<span class="route-target">{{.TargetAddress}}</span>
+</div>
+            {{end}}
+        {{else}}
+<div class="empty">
+<p>NO ACTIVE ROUTES</p>
+<p style="font-size: 0.875rem; margin-top: 0.5rem;">Start a container with proxy labels to see it here</p>
+</div>
+        {{end}}
+</div>
+</body>
+</html>
