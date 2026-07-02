@@ -1,4 +1,4 @@
-package main
+package container
 
 const (
 	ProxyHost = "proxy.host"

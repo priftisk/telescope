@@ -1,9 +1,12 @@
 package main
 
-import "log"
+import (
+	"log"
+	"telescope/internal/server"
+)
 
 func main() {
-	server, err := NewServer()
+	server, err := server.NewServer()
 	if err != nil {
 		log.Fatalf("Failed to create server: %v", err)
 	}

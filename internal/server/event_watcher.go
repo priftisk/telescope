@@ -1,9 +1,10 @@
-package main
+package server
 
 import (
 	"context"
 	"log"
 	"log/slog"
+	"telescope/internal/container"
 
 	"github.com/moby/moby/client"
 )
@@ -34,7 +35,7 @@ func (s *Server) watchEvents(ctx context.Context) {
 					continue
 				}
 
-				container, valid := ExtractContainerData(c.Container)
+				container, valid := container.ExtractContainerData(c.Container)
 				if !valid {
 					slog.Info("skipping container(no proxy host resolved)", "container", event.Actor.ID)
 					continue

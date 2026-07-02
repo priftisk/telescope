@@ -1,6 +1,11 @@
-package main
+package router
 
-import "strings"
+import (
+	"net"
+	"net/http"
+	"strings"
+	"telescope/internal/container"
+)
 
 type Route struct {
 	ContainerID   string `json:"container_id"`
@@ -9,7 +14,31 @@ type Route struct {
 	URLPath       string `json:"url_path"`
 }
 
-func NewRoute(container ContainerInfo) Route {
+func StripPort(host string) string {
+	hostOnly, _, err := net.SplitHostPort(host)
+	if err != nil {
+		// No port present.
+		return host
+	}
+	return hostOnly
+}
+
+func GetHostAndPath(r *http.Request) (string, string) {
+	host := StripPort(r.Host)
+
+	path := strings.Trim(r.URL.Path, "/")
+	if path == "" {
+		return host, "/"
+	}
+
+	if i := strings.IndexByte(path, '/'); i != -1 {
+		path = path[:i]
+	}
+
+	return host, path
+}
+
+func NewRoute(container container.ContainerInfo) Route {
 
 	return Route{
 		ContainerID:   container.ContainerID,

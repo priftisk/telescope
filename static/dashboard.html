@@ -4,11 +4,9 @@
 <title>Telescope Dashboard</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="/static/dashboard.js" ></script>
 <link rel="stylesheet" href="/static/dashboard.css" />
 <link rel="icon" href="data:," />
-<script>
-  document.cookie = 'telescope_dashboard=1; path=/; SameSite=Strict';
-</script>
 </head>
 <body>
 <div class="container">
@@ -32,7 +30,7 @@
 <div class="stat-value" style="font-size: 1.5rem;">{{.Version}}</div>
 </div>
 </div>
-<button class="refresh-btn" onclick="location.reload()">REFRESH</button>
+<button id="refresh-btn" class="refresh-btn" onclick="location.reload()">REFRESH</button>
 <h2>Routes</h2>
         {{if .Routes}}
             {{range .Routes}}
