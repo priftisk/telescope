@@ -29,6 +29,14 @@ type Server struct {
 	wg          sync.WaitGroup
 }
 
+func (s *Server) GetStartTime() time.Time {
+	return s.startTime
+}
+
+func (s *Server) GetRouteTable() *router.RouteTable {
+	return s.routeTable
+}
+
 func NewServer() (*Server, error) {
 	// Initialize logger
 	// InitLogger()

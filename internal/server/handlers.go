@@ -13,7 +13,6 @@ import (
 	"telescope/internal/proxy"
 	router "telescope/internal/router"
 	"text/template"
-	"time"
 )
 
 func (s *Server) ProxyHandler(w http.ResponseWriter, r *http.Request) {
@@ -37,12 +36,7 @@ func (s *Server) ProxyHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 
-	data := dashboard.DashboardData{
-		Routes:      s.routeTable.Routes,
-		TotalRoutes: len(s.routeTable.Routes),
-		Uptime:      time.Since(s.startTime).Milliseconds(),
-		Version:     "1.0.0",
-	}
+	data := dashboard.NewDashboardData(s.GetRouteTable(), s.GetStartTime())
 	static_dir, err := internal.GetStaticDir()
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
@@ -62,12 +56,7 @@ func (s *Server) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) DashboardResourceHandler(w http.ResponseWriter, r *http.Request) {
 	// resource := r.PathValue("resource")
 	// fmt.Println("Resource: ", resource)
-	data := dashboard.DashboardData{
-		Routes:      s.routeTable.Routes,
-		TotalRoutes: len(s.routeTable.Routes),
-		Uptime:      time.Since(s.startTime).Milliseconds(),
-		Version:     "1.0.0",
-	}
+	data := dashboard.NewDashboardData(s.GetRouteTable(), s.GetStartTime())
 	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
