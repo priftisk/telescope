@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"log/slog"
@@ -39,7 +40,7 @@ func (s *Server) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	data := dashboard.DashboardData{
 		Routes:      s.routeTable.Routes,
 		TotalRoutes: len(s.routeTable.Routes),
-		Uptime:      time.Since(s.startTime),
+		Uptime:      time.Since(s.startTime).Milliseconds(),
 		Version:     "1.0.0",
 	}
 	static_dir, err := internal.GetStaticDir()
@@ -56,4 +57,19 @@ func (s *Server) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tmpl.Execute(w, data)
+}
+
+func (s *Server) DashboardResourceHandler(w http.ResponseWriter, r *http.Request) {
+	// resource := r.PathValue("resource")
+	// fmt.Println("Resource: ", resource)
+	data := dashboard.DashboardData{
+		Routes:      s.routeTable.Routes,
+		TotalRoutes: len(s.routeTable.Routes),
+		Uptime:      time.Since(s.startTime).Milliseconds(),
+		Version:     "1.0.0",
+	}
+	w.WriteHeader(200)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+
 }

@@ -74,8 +74,11 @@ func (s *Server) onStartup(ctx context.Context) error {
 func (s *Server) serve(ctx context.Context) error {
 	// --- Dashboard / API server ---
 	dashboardMux := http.NewServeMux()
+	// API
 	dashboardMux.HandleFunc("GET /routes", s.RoutesHandler)
+	// Dashboard
 	dashboardMux.HandleFunc("GET /dashboard", s.DashboardHandler)
+	dashboardMux.HandleFunc("/dashboard/{resource}", s.DashboardResourceHandler)
 	static_dir, _ := internal.GetStaticDir()
 	dashboardMux.Handle("GET /static/", http.StripPrefix("/static/",
 		http.FileServer(http.Dir(static_dir))))

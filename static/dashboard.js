@@ -1,14 +1,34 @@
 const REFRESH_INTERVAL_MS = 5000;
 let refreshTimer = null;
 
-function CreateRoutesList(routesData) {
+
+function formatUptime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+
+  return `${hours}:${minutes}:${seconds}`;
+}
+
+function RenderData(data) {
+    const uptimeContainer = document.getElementById('uptime-container');
     const container = document.getElementById('routes-container');
     const activeCount = document.getElementById('active-routes');
     container.innerHTML = '';
 
-    activeCount.textContent = routesData ? routesData.length : 0;
-
-    if (!routesData || routesData.length === 0) {
+    let total_routes = data?.total_routes ?? 0
+    let routes = data?.routes ?? []
+    let uptime = data?.uptime ?? ""
+    
+    activeCount.textContent = total_routes
+    formattedTime = formatUptime(uptime)
+    uptimeContainer.innerHTML = `
+         <div class="plate-label">Uptime</div>
+          <div id="uptime" class="plate-value">${escapeHtml(formattedTime)}</div>
+    `
+    if (!routes || total_routes === 0) {
         container.innerHTML = `
             <div class="empty">
                 <p>NO ACTIVE ROUTES</p>
@@ -18,7 +38,7 @@ function CreateRoutesList(routesData) {
         return;
     }
 
-    routesData.forEach(route => {
+    routes.forEach(route => {
         const card = document.createElement('div');
         card.className = 'route-card';
 
@@ -38,6 +58,8 @@ function CreateRoutesList(routesData) {
         container.appendChild(card);
     });
 }
+
+
 
 function showLoading() {
     const container = document.getElementById('routes-container');
@@ -71,8 +93,8 @@ function setRefreshing(isRefreshing) {
     btn.classList.toggle('refreshing', isRefreshing);
 }
 
-async function GetRoutes({ showLoadingState = false } = {}) {
-    const url = "http://localhost:8900/routes";
+async function GetDashboardData({ showLoadingState = false } = {}) {
+    const url = "http://localhost:8900/dashboard/data";
 
     if (showLoadingState) {
         showLoading();
@@ -85,7 +107,8 @@ async function GetRoutes({ showLoadingState = false } = {}) {
             throw new Error(`Response status: ${response.status}`);
         }
         const result = await response.json();
-        CreateRoutesList(result);
+        console.log(result)
+        RenderData(result);
     } catch (error) {
         console.error(error.message);
         showError(error.message);
@@ -96,14 +119,14 @@ async function GetRoutes({ showLoadingState = false } = {}) {
 
 function startAutoRefresh() {
     if (refreshTimer) clearInterval(refreshTimer);
-    refreshTimer = setInterval(() => GetRoutes(), REFRESH_INTERVAL_MS);
+    refreshTimer = setInterval(() => GetDashboardData(), REFRESH_INTERVAL_MS);
 }
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('refresh-btn').addEventListener('click', () => {
-        GetRoutes({ showLoadingState: true });
+        GetDashboardData({ showLoadingState: true });
         startAutoRefresh();
     });
 
-    GetRoutes({ showLoadingState: true });
+    GetDashboardData({ showLoadingState: true });
     startAutoRefresh();
 });
