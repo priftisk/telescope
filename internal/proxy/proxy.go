@@ -26,18 +26,14 @@ func RewriteProxy(targetURL *url.URL, targetPath string, r *http.Request) func(*
 	}
 }
 
-func MakeAndServe(targetURL *url.URL, targetPath string, w http.ResponseWriter, r *http.Request) {
+func (p *ProxyServer) MakeAndServe(targetURL *url.URL, targetPath string, w http.ResponseWriter, r *http.Request) {
 
 	proxy := &httputil.ReverseProxy{
-		Rewrite: RewriteProxy(targetURL, targetPath, r),
+		Rewrite:   RewriteProxy(targetURL, targetPath, r),
+		Transport: p.roundTripper,
 	}
 
 	proxy.ServeHTTP(w, r)
 	log.Printf("PROXY %s %s %s → %s",
 		r.Method, r.URL.Path, r.Host, targetURL)
 }
-
-// func IsFromDashboard(r *http.Request) bool {
-// 	cookie, err := r.Cookie("telescope_dashboard")
-// 	return err == nil && cookie.Value == "1"
-// }

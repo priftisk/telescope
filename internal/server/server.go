@@ -28,6 +28,7 @@ type Server struct {
 	// Internal state
 	dashboard *dashboard.DashboardServer
 	proxy     *proxy.ProxyServer
+	trips     *proxy.Trips
 	wg        sync.WaitGroup
 }
 
@@ -48,13 +49,14 @@ func NewServer() (*Server, error) {
 	}
 
 	rt := &router.RouteTable{}
+	trips := &proxy.Trips{}
 	startTime := time.Now()
 
-	dashboardSrv, err := dashboard.NewDashboardServer(rt, startTime)
+	dashboardSrv, err := dashboard.NewDashboardServer(rt, trips, startTime)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dashboard server: %w", err)
 	}
-	proxySrv := proxy.NewProxyServer(rt)
+	proxySrv := proxy.NewProxyServer(rt, trips)
 
 	return &Server{
 		dockerClient: apiClient,

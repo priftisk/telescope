@@ -10,12 +10,14 @@ import (
 )
 
 type ProxyServer struct {
-	routeTable *router.RouteTable
-	httpServer *http.Server
+	routeTable   *router.RouteTable
+	trips        *Trips
+	httpServer   *http.Server
+	roundTripper *ProxyRoundTripper
 }
 
-func NewProxyServer(rt *router.RouteTable) *ProxyServer {
-	p := &ProxyServer{routeTable: rt}
+func NewProxyServer(rt *router.RouteTable, trips *Trips) *ProxyServer {
+	p := &ProxyServer{routeTable: rt, roundTripper: NewProxyRoundTripper()}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", p.ProxyHandler)
@@ -27,10 +29,10 @@ func NewProxyServer(rt *router.RouteTable) *ProxyServer {
 	return p
 }
 
-func (p *ProxyServer) ProxyHandler(w http.ResponseWriter, r *http.Request) {
+func (proxy *ProxyServer) ProxyHandler(w http.ResponseWriter, r *http.Request) {
 
 	host, targetPath := router.GetHostAndPath(r)
-	targetAddress, found := p.routeTable.Lookup(host, targetPath)
+	targetAddress, found := proxy.routeTable.Lookup(host, targetPath)
 	if !found {
 		log.Printf("Proxy fail: %s | %s not found\n", host, targetPath)
 		w.WriteHeader(502)
@@ -43,7 +45,7 @@ func (p *ProxyServer) ProxyHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
-	MakeAndServe(targetURL, targetPath, w, r)
+	proxy.MakeAndServe(targetURL, targetPath, w, r)
 }
 
 func (p *ProxyServer) ListenAndServe() error {
