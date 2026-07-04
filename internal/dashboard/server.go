@@ -82,7 +82,10 @@ func (d *DashboardServer) DashboardResourceHandler(w http.ResponseWriter, r *htt
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(data)
 	case "trips":
-
+		trips := d.trips.GetAll()
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		json.NewEncoder(w).Encode(trips)
 	default:
 		w.WriteHeader(404)
 		json.NewEncoder(w).Encode([]byte("Not found"))

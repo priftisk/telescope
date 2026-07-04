@@ -131,9 +131,34 @@ async function GetDashboardData({ showLoadingState = false } = {}) {
     }
 }
 
+
+async function GetDashboardTrips({ showLoadingState = false } = {}) {
+    const url = "http://localhost:8900/dashboard/trips";
+
+    if (showLoadingState) {
+        showLoading();
+    }
+    setRefreshing(true);
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+        }
+        const result = await response.json();
+        // RenderData(result);
+        console.log(result)
+    } catch (error) {
+        console.error(error.message);
+        showError(error.message);
+    } finally {
+        setRefreshing(false);
+    }
+}
+
 function startAutoRefresh() {
     if (refreshTimer) clearInterval(refreshTimer);
-    refreshTimer = setInterval(() => GetDashboardData(), REFRESH_INTERVAL_MS);
+    refreshTimer = setInterval(() => {GetDashboardData(); GetDashboardTrips()}, REFRESH_INTERVAL_MS);
 }
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('refresh-btn').addEventListener('click', () => {

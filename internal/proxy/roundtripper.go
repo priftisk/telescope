@@ -30,11 +30,7 @@ func (pt *ProxyRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) 
 	}
 	elapsed := time.Since(start)
 	// Record the trip
-	trip := Trip{
-		req:      r,
-		resp:     resp,
-		duration: elapsed,
-	}
+	trip := NewTrip(r, resp, elapsed)
 	pt.Trips.Add(trip)
 
 	return resp, nil
