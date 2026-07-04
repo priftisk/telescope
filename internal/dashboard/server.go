@@ -72,8 +72,8 @@ func (d *DashboardServer) DashboardHandler(w http.ResponseWriter, r *http.Reques
 
 func (d *DashboardServer) DashboardResourceHandler(w http.ResponseWriter, r *http.Request) {
 	data := NewDashboardData(d.routeTable, d.startTime)
-	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(data)
 }
 
