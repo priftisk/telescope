@@ -17,7 +17,10 @@ type ProxyServer struct {
 }
 
 func NewProxyServer(rt *router.RouteTable, trips *Trips) *ProxyServer {
-	p := &ProxyServer{routeTable: rt, roundTripper: NewProxyRoundTripper()}
+	p := &ProxyServer{
+		routeTable:   rt,
+		roundTripper: NewProxyRoundTripper(trips),
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", p.ProxyHandler)

@@ -8,6 +8,18 @@ import (
 	"strings"
 )
 
+func (p *ProxyServer) MakeAndServe(targetURL *url.URL, targetPath string, w http.ResponseWriter, r *http.Request) {
+
+	proxy := &httputil.ReverseProxy{
+		Rewrite:   RewriteProxy(targetURL, targetPath, r),
+		Transport: p.roundTripper,
+	}
+
+	proxy.ServeHTTP(w, r)
+	log.Printf("PROXY %s %s %s → %s",
+		r.Method, r.URL.Path, r.Host, targetURL)
+}
+
 func RewriteProxy(targetURL *url.URL, targetPath string, r *http.Request) func(*httputil.ProxyRequest) {
 	return func(pr *httputil.ProxyRequest) {
 
@@ -24,16 +36,4 @@ func RewriteProxy(targetURL *url.URL, targetPath string, r *http.Request) func(*
 		}
 
 	}
-}
-
-func (p *ProxyServer) MakeAndServe(targetURL *url.URL, targetPath string, w http.ResponseWriter, r *http.Request) {
-
-	proxy := &httputil.ReverseProxy{
-		Rewrite:   RewriteProxy(targetURL, targetPath, r),
-		Transport: p.roundTripper,
-	}
-
-	proxy.ServeHTTP(w, r)
-	log.Printf("PROXY %s %s %s → %s",
-		r.Method, r.URL.Path, r.Host, targetURL)
 }

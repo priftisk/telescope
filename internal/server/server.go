@@ -48,19 +48,19 @@ func NewServer() (*Server, error) {
 		return nil, fmt.Errorf("failed to create docker client: %w", err)
 	}
 
-	rt := &router.RouteTable{}
-	trips := &proxy.Trips{}
+	routeTable := router.NewRouteTable()
+	trips := proxy.NewTripsRecorder()
 	startTime := time.Now()
 
-	dashboardSrv, err := dashboard.NewDashboardServer(rt, trips, startTime)
+	dashboardSrv, err := dashboard.NewDashboardServer(routeTable, trips, startTime)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dashboard server: %w", err)
 	}
-	proxySrv := proxy.NewProxyServer(rt, trips)
+	proxySrv := proxy.NewProxyServer(routeTable, trips)
 
 	return &Server{
 		dockerClient: apiClient,
-		routeTable:   rt,
+		routeTable:   routeTable,
 		startTime:    startTime,
 		dashboard:    dashboardSrv,
 		proxy:        proxySrv,

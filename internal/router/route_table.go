@@ -14,6 +14,13 @@ type RouteTable struct {
 	HostIndex map[string][]*Route
 }
 
+func NewRouteTable() *RouteTable {
+	return &RouteTable{
+		Routes:    make([]Route, 0),
+		HostIndex: map[string][]*Route{},
+	}
+}
+
 func (rt *RouteTable) Register(container container.ContainerInfo) {
 	rt.Mutex.Lock()
 	defer rt.Mutex.Unlock()

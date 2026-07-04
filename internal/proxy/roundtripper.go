@@ -13,9 +13,10 @@ type ProxyRoundTripper struct {
 	mu        sync.Mutex
 }
 
-func NewProxyRoundTripper() *ProxyRoundTripper {
+func NewProxyRoundTripper(trips *Trips) *ProxyRoundTripper {
 	return &ProxyRoundTripper{
 		Transport: http.DefaultTransport,
+		Trips:     trips,
 	}
 }
 

@@ -1,10 +1,19 @@
 package proxy
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type Trips struct {
 	trips []Trip
 	mu    sync.RWMutex
+}
+
+func NewTripsRecorder() *Trips {
+	return &Trips{
+		trips: make([]Trip, 0),
+	}
 }
 
 func (t *Trips) Add(trip Trip) {
@@ -12,6 +21,7 @@ func (t *Trips) Add(trip Trip) {
 	defer t.mu.Unlock()
 
 	t.trips = append(t.trips, trip)
+	fmt.Printf("%+v\n", trip)
 }
 
 func (t *Trips) Remove(index int) bool {
