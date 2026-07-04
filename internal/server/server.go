@@ -10,23 +10,25 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"telescope/internal"
 	"telescope/internal/container"
+	"telescope/internal/dashboard"
+	"telescope/internal/proxy"
 	router "telescope/internal/router"
 	"time"
 
 	"github.com/moby/moby/client"
 )
 
+// Handles the lifecycle of the app.
 type Server struct {
 	dockerClient *client.Client
 	routeTable   *router.RouteTable
 	startTime    time.Time
 
 	// Internal state
-	httpServer  *http.Server
-	proxyServer *http.Server
-	wg          sync.WaitGroup
+	dashboard *dashboard.DashboardServer
+	proxy     *proxy.ProxyServer
+	wg        sync.WaitGroup
 }
 
 func (s *Server) GetStartTime() time.Time {
@@ -36,12 +38,7 @@ func (s *Server) GetStartTime() time.Time {
 func (s *Server) GetRouteTable() *router.RouteTable {
 	return s.routeTable
 }
-
 func NewServer() (*Server, error) {
-	// Initialize logger
-	// InitLogger()
-
-	// Create Docker client
 	apiClient, err := client.New(
 		client.FromEnv,
 		client.WithUserAgent("telescope/1.0.0"),
@@ -50,12 +47,22 @@ func NewServer() (*Server, error) {
 		return nil, fmt.Errorf("failed to create docker client: %w", err)
 	}
 
+	rt := &router.RouteTable{}
+	startTime := time.Now()
+
+	dashboardSrv, err := dashboard.NewDashboardServer(rt, startTime)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create dashboard server: %w", err)
+	}
+	proxySrv := proxy.NewProxyServer(rt)
+
 	return &Server{
 		dockerClient: apiClient,
-		routeTable:   &router.RouteTable{},
-		startTime:    time.Now(),
+		routeTable:   rt,
+		startTime:    startTime,
+		dashboard:    dashboardSrv,
+		proxy:        proxySrv,
 	}, nil
-
 }
 
 func (s *Server) onStartup(ctx context.Context) error {
@@ -78,36 +85,7 @@ func (s *Server) onStartup(ctx context.Context) error {
 	}
 	return nil
 }
-
 func (s *Server) serve(ctx context.Context) error {
-	// --- Dashboard / API server ---
-	dashboardMux := http.NewServeMux()
-	// API
-	dashboardMux.HandleFunc("GET /routes", s.RoutesHandler)
-	// Dashboard
-	dashboardMux.HandleFunc("GET /dashboard", s.DashboardHandler)
-	dashboardMux.HandleFunc("/dashboard/{resource}", s.DashboardResourceHandler)
-	static_dir, _ := internal.GetStaticDir()
-	dashboardMux.Handle("GET /static/", http.StripPrefix("/static/",
-		http.FileServer(http.Dir(static_dir))))
-
-	dashboardServer := &http.Server{
-		Addr:    ":8900",
-		Handler: dashboardMux,
-	}
-
-	// --- Proxy server (catch-all) ---
-	proxyMux := http.NewServeMux()
-	proxyMux.HandleFunc("/", s.ProxyHandler)
-
-	proxyServer := &http.Server{
-		Addr:    ":8901",
-		Handler: proxyMux,
-	}
-
-	s.httpServer = dashboardServer
-	s.proxyServer = proxyServer
-
 	// Handle shutdown for both servers in background
 	go func() {
 		<-ctx.Done()
@@ -121,14 +99,14 @@ func (s *Server) serve(ctx context.Context) error {
 
 		go func() {
 			defer wg.Done()
-			if err := dashboardServer.Shutdown(shutdownCtx); err != nil {
+			if err := s.dashboard.Shutdown(shutdownCtx); err != nil {
 				slog.Error("Dashboard server shutdown error", "error", err)
 			}
 		}()
 
 		go func() {
 			defer wg.Done()
-			if err := proxyServer.Shutdown(shutdownCtx); err != nil {
+			if err := s.proxy.Shutdown(shutdownCtx); err != nil {
 				slog.Error("Proxy server shutdown error", "error", err)
 			}
 		}()
@@ -136,15 +114,13 @@ func (s *Server) serve(ctx context.Context) error {
 		wg.Wait()
 	}()
 
-	// slog.Info("Telescope dashboard listening on :8900")
 	slog.Info("Dashboard available at http://localhost:8900/dashboard")
 	slog.Info("Telescope proxy listening on :8901")
 
-	// Run both servers concurrently; return on first fatal error
 	errCh := make(chan error, 2)
 
 	go func() {
-		if err := dashboardServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := s.dashboard.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errCh <- fmt.Errorf("dashboard server error: %w", err)
 			return
 		}
@@ -152,14 +128,13 @@ func (s *Server) serve(ctx context.Context) error {
 	}()
 
 	go func() {
-		if err := proxyServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := s.proxy.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			errCh <- fmt.Errorf("proxy server error: %w", err)
 			return
 		}
 		errCh <- nil
 	}()
 
-	// Wait for both to finish (either cleanly on shutdown, or with an error)
 	var firstErr error
 	for range 2 {
 		if err := <-errCh; err != nil && firstErr == nil {
