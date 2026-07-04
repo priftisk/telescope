@@ -1,7 +1,6 @@
 package roundtripper
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -21,7 +20,6 @@ func (t *Trips) Add(trip Trip) {
 	defer t.mu.Unlock()
 
 	t.trips = append(t.trips, trip)
-	fmt.Printf("%+v\n", trip)
 }
 
 func (t *Trips) Remove(index int) bool {

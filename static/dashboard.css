@@ -369,6 +369,126 @@ a:focus-visible {
   content: "·";
   margin-right: 0.5rem;
 }
+/* ----------- Trips -----------------*/
+#trips-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.trip-card {
+  background: var(--void-panel);
+  border: 1px solid var(--panel-border);
+  border-left: 3px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 0.75rem 1.1rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.trip-card:hover {
+  background: color-mix(in srgb, var(--void-panel) 92%, var(--nebula) 8%);
+}
+
+.trip-card[data-status-class="success"] { border-left-color: var(--status-success, #3fae6a); }
+.trip-card[data-status-class="redirect"] { border-left-color: var(--status-redirect, #4a90d9); }
+.trip-card[data-status-class="client-error"] { border-left-color: var(--status-warn, #d9a441); }
+.trip-card[data-status-class="server-error"] { border-left-color: var(--status-error, #d94a4a); }
+
+.trip-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.trip-method {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.trip-method[data-method="GET"]    { background: color-mix(in srgb, #4a90d9 18%, transparent); color: #7db3ec; }
+.trip-method[data-method="POST"]   { background: color-mix(in srgb, #3fae6a 18%, transparent); color: #6ecb95; }
+.trip-method[data-method="PUT"]    { background: color-mix(in srgb, #d9a441 18%, transparent); color: #edbe6c; }
+.trip-method[data-method="PATCH"]  { background: color-mix(in srgb, #a67bd9 18%, transparent); color: #c4a3ec; }
+.trip-method[data-method="DELETE"] { background: color-mix(in srgb, #d94a4a 18%, transparent); color: #ec7d7d; }
+
+.trip-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--starlight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.trip-query {
+  color: var(--starlight-faint);
+}
+
+.trip-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.trip-status[data-status-class="success"] { color: var(--status-success, #3fae6a); }
+.trip-status[data-status-class="redirect"] { color: var(--status-redirect, #4a90d9); }
+.trip-status[data-status-class="client-error"] { color: var(--status-warn, #d9a441); }
+.trip-status[data-status-class="server-error"] { color: var(--status-error, #d94a4a); }
+
+.trip-secondary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--starlight-dim);
+  flex-wrap: wrap;
+}
+
+.trip-secondary > span + span::before {
+  content: "·";
+  margin-right: 0.75rem;
+  color: var(--starlight-faint);
+}
+
+.trip-tertiary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--starlight-faint);
+}
+
+.trip-remote {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.trip-ua {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 320px;
+}
+
+.trip-error {
+  margin-top: 0.4rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem;
+  color: var(--status-error, #d94a4a);
+  background: color-mix(in srgb, var(--status-error, #d94a4a) 10%, transparent);
+  border-radius: 4px;
+  padding: 0.3rem 0.55rem;
+}
+
+
 /* ---------- empty state ---------- */
 
 .empty {

@@ -90,24 +90,24 @@ func (s *Server) serve(ctx context.Context) error {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		var wg sync.WaitGroup
-		wg.Add(2)
+		// var wg sync.WaitGroup
+		s.wg.Add(2)
 
 		go func() {
-			defer wg.Done()
+			defer s.wg.Done()
 			if err := s.dashboard.Shutdown(shutdownCtx); err != nil {
 				slog.Error("Dashboard server shutdown error", "error", err)
 			}
 		}()
 
 		go func() {
-			defer wg.Done()
+			defer s.wg.Done()
 			if err := s.proxy.Shutdown(shutdownCtx); err != nil {
 				slog.Error("Proxy server shutdown error", "error", err)
 			}
 		}()
 
-		wg.Wait()
+		s.wg.Wait()
 	}()
 
 	slog.Info("Dashboard available at http://localhost:8900/dashboard")
