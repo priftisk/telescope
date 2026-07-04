@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"telescope/internal"
-	"telescope/internal/proxy"
+	"telescope/internal/roundtripper"
 	"telescope/internal/router"
 	"text/template"
 	"time"
@@ -15,7 +15,7 @@ import (
 
 type DashboardServer struct {
 	routeTable *router.RouteTable
-	trips      *proxy.Trips
+	trips      *roundtripper.Trips
 	startTime  time.Time
 	httpServer *http.Server
 }
@@ -28,7 +28,7 @@ func (d *DashboardServer) Shutdown(ctx context.Context) error {
 	return d.httpServer.Shutdown(ctx)
 }
 
-func NewDashboardServer(rt *router.RouteTable, trips *proxy.Trips, startTime time.Time) (*DashboardServer, error) {
+func NewDashboardServer(rt *router.RouteTable, trips *roundtripper.Trips, startTime time.Time) (*DashboardServer, error) {
 	d := &DashboardServer{
 		routeTable: rt,
 		trips:      trips,

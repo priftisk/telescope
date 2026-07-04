@@ -1,7 +1,7 @@
 package dashboard
 
 import (
-	"telescope/internal/proxy"
+	"telescope/internal/roundtripper"
 	"telescope/internal/router"
 	"time"
 )
@@ -24,6 +24,6 @@ func NewDashboardData(routeTable *router.RouteTable, upTime time.Time) *Dashboar
 }
 
 type TripsData struct {
-	Trips    []proxy.Trip
+	Trips    []roundtripper.Trip
 	TripsNum int64
 }

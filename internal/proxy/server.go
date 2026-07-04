@@ -6,20 +6,21 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"telescope/internal/roundtripper"
 	"telescope/internal/router"
 )
 
 type ProxyServer struct {
 	routeTable   *router.RouteTable
-	trips        *Trips
+	trips        *roundtripper.Trips
 	httpServer   *http.Server
-	roundTripper *ProxyRoundTripper
+	roundTripper *roundtripper.ProxyRoundTripper
 }
 
-func NewProxyServer(rt *router.RouteTable, trips *Trips) *ProxyServer {
+func NewProxyServer(rt *router.RouteTable, trips *roundtripper.Trips) *ProxyServer {
 	p := &ProxyServer{
 		routeTable:   rt,
-		roundTripper: NewProxyRoundTripper(trips),
+		roundTripper: roundtripper.NewProxyRoundTripper(trips),
 	}
 
 	mux := http.NewServeMux()

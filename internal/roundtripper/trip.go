@@ -1,4 +1,4 @@
-package proxy
+package roundtripper
 
 import (
 	"net/http"

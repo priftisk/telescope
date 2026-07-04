@@ -13,6 +13,7 @@ import (
 	"telescope/internal/container"
 	"telescope/internal/dashboard"
 	"telescope/internal/proxy"
+	"telescope/internal/roundtripper"
 	router "telescope/internal/router"
 	"time"
 
@@ -28,17 +29,10 @@ type Server struct {
 	// Internal state
 	dashboard *dashboard.DashboardServer
 	proxy     *proxy.ProxyServer
-	trips     *proxy.Trips
+	trips     *roundtripper.Trips
 	wg        sync.WaitGroup
 }
 
-func (s *Server) GetStartTime() time.Time {
-	return s.startTime
-}
-
-func (s *Server) GetRouteTable() *router.RouteTable {
-	return s.routeTable
-}
 func NewServer() (*Server, error) {
 	apiClient, err := client.New(
 		client.FromEnv,
@@ -49,7 +43,7 @@ func NewServer() (*Server, error) {
 	}
 
 	routeTable := router.NewRouteTable()
-	trips := proxy.NewTripsRecorder()
+	trips := roundtripper.NewTripsRecorder()
 	startTime := time.Now()
 
 	dashboardSrv, err := dashboard.NewDashboardServer(routeTable, trips, startTime)
