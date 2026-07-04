@@ -1,14 +1,67 @@
 const REFRESH_INTERVAL_MS = 5000;
 let refreshTimer = null;
 
-function CreateRoutesList(routesData) {
-    const container = document.getElementById('routes-container');
+
+function formatUptime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+
+    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+    const seconds = String(totalSeconds % 60).padStart(2, "0");
+
+    return `${hours}:${minutes}:${seconds}`;
+}
+
+function RenderUptime(uptime) {
+    const uptimeContainer = document.getElementById('uptime-container');
+    formattedTime = formatUptime(uptime)
+    uptimeContainer.innerHTML = `
+        <div class="plate-label">Uptime</div>
+        <div id="uptime" class="plate-value">${escapeHtml(formattedTime)}</div>
+    `
+}
+
+function RenderActiveCount(newCount) {
     const activeCount = document.getElementById('active-routes');
+
+    activeCount.textContent = newCount
+}
+
+function RenderRoutesList(container, routes) {
+    routes.forEach(route => {
+        const card = document.createElement('div');
+        card.className = 'route-card';
+
+        card.innerHTML = `
+                <div class="route-status" aria-hidden="true"></div>
+                <div class="route-main">
+                    <span class="route-host">${escapeHtml(route.hostname)}</span>
+                    ${route.url_path ? `<span class="route-path">${escapeHtml(route.url_path)}</span>` : ''}
+                    <span class="route-arrow">→</span>
+                    <span class="route-target">${escapeHtml(route.address)}</span>
+                </div>
+                <div class="route-meta">
+                    <span class="route-container-name">${escapeHtml(route.container_name)}</span>
+                    <span class="route-container-id">${escapeHtml(route.container_id)}</span>
+                </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+function RenderData(data) {
+    const container = document.getElementById('routes-container');
     container.innerHTML = '';
 
-    activeCount.textContent = routesData ? routesData.length : 0;
+    let total_routes = data?.total_routes ?? 0
+    let routes = data?.routes ?? []
+    let uptime = data?.uptime ?? ""
 
-    if (!routesData || routesData.length === 0) {
+    RenderUptime(uptime)
+    RenderActiveCount(total_routes)
+
+    if (!routes || total_routes === 0) {
         container.innerHTML = `
             <div class="empty">
                 <p>NO ACTIVE ROUTES</p>
@@ -18,26 +71,10 @@ function CreateRoutesList(routesData) {
         return;
     }
 
-    routesData.forEach(route => {
-        const card = document.createElement('div');
-        card.className = 'route-card';
-
-        card.innerHTML = `
-            <div class="route-main">
-                <span class="route-host">${escapeHtml(route.hostname)}</span>
-                ${route.URLPath ? `<span class="route-path">${escapeHtml(route.url_path)}</span>` : ''}
-                <span class="route-arrow">→</span>
-                <span class="route-target">${escapeHtml(route.address)}</span>
-            </div>
-            <div class="route-meta">
-                <span class="route-container-name">${escapeHtml(route.container_name)}</span>
-                <span class="route-container-id">${escapeHtml(route.container_id)}</span>
-            </div>
-        `;
-
-        container.appendChild(card);
-    });
+    RenderRoutesList(container, routes)
 }
+
+
 
 function showLoading() {
     const container = document.getElementById('routes-container');
@@ -71,8 +108,8 @@ function setRefreshing(isRefreshing) {
     btn.classList.toggle('refreshing', isRefreshing);
 }
 
-async function GetRoutes({ showLoadingState = false } = {}) {
-    const url = "http://localhost:8900/routes";
+async function GetDashboardData({ showLoadingState = false } = {}) {
+    const url = "http://localhost:8900/dashboard/data";
 
     if (showLoadingState) {
         showLoading();
@@ -85,7 +122,7 @@ async function GetRoutes({ showLoadingState = false } = {}) {
             throw new Error(`Response status: ${response.status}`);
         }
         const result = await response.json();
-        CreateRoutesList(result);
+        RenderData(result);
     } catch (error) {
         console.error(error.message);
         showError(error.message);
@@ -96,14 +133,14 @@ async function GetRoutes({ showLoadingState = false } = {}) {
 
 function startAutoRefresh() {
     if (refreshTimer) clearInterval(refreshTimer);
-    refreshTimer = setInterval(() => GetRoutes(), REFRESH_INTERVAL_MS);
+    refreshTimer = setInterval(() => GetDashboardData(), REFRESH_INTERVAL_MS);
 }
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('refresh-btn').addEventListener('click', () => {
-        GetRoutes({ showLoadingState: true });
+        GetDashboardData({ showLoadingState: true });
         startAutoRefresh();
     });
 
-    GetRoutes({ showLoadingState: true });
+    GetDashboardData({ showLoadingState: true });
     startAutoRefresh();
 });

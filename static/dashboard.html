@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Telescope Dashboard — Bridge Console</title>
+<link rel="stylesheet" href="/static/dashboard.css" />
 <script src="/static/dashboard.js" defer></script>
 <link rel="icon" href="data:," />
-<link rel="stylesheet" href="/static/dashboard.css" />
 </head>
 <body>
 <div class="container">
@@ -22,9 +22,9 @@
       <p class="subtitle">Dynamic Docker reverse proxy</p>
 
       <div class="plates">
-        <div class="plate">
+        <div id="uptime-container" class="plate">
           <div class="plate-label">Uptime</div>
-          <div class="plate-value">{{.Uptime}}</div>
+          <div id="uptime" class="plate-value">{{.Uptime}}</div>
         </div>
         <div class="plate">
           <div class="plate-label">Version</div>
