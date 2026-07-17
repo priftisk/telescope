@@ -1,61 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Telescope Dashboard — Bridge Console</title>
-<link rel="stylesheet" href="/static/dashboard.css" />
-<script src="/static/dashboard.js" defer></script>
-<link rel="icon" href="data:," />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Telescope Dashboard — Bridge Console</title>
+  <link rel="stylesheet" href="/static/dashboard.css" />
+  <script src="/static/dashboard.js" defer></script>
+  <link rel="icon" href="data:," />
 </head>
+
 <body>
-<div class="container">
+  <div class="container">
 
-  <header class="terminal-header">
-    <span>TELESCOPE v{{.Version}} :: TRACKING CONSOLE</span>
-    <span>SESSION ACTIVE</span>
-  </header>
+    <header class="terminal-header">
+      <span>TELESCOPE v{{.Version}} :: TRACKING CONSOLE</span>
+      <span>SESSION ACTIVE</span>
+    </header>
 
-  <section class="hero">
-    <div class="hero-text">
-      <h1>Telescope<span class="cursor"></span></h1>
-      <p class="subtitle">Dynamic Docker reverse proxy</p>
+    <section class="hero">
+      <div class="hero-text">
+        <h1>Telescope<span class="cursor"></span></h1>
+        <p class="subtitle">Dynamic Docker reverse proxy</p>
 
-      <div class="plates">
-        <div id="uptime-container" class="plate">
-          <div class="plate-label">Uptime</div>
-          <div id="uptime" class="plate-value">{{.Uptime}}</div>
-        </div>
-        <div class="plate">
-          <div class="plate-label">Version</div>
-          <div class="plate-value">{{.Version}}</div>
+        <div class="plates">
+          <div id="uptime-container" class="plate">
+            <div class="plate-label">Uptime</div>
+            <div id="uptime" class="plate-value">{{.Uptime}}</div>
+          </div>
+          <div class="plate">
+            <div class="plate-label">Version</div>
+            <div class="plate-value">{{.Version}}</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Viewfinder: the live count of routes currently in view -->
-    <div class="viewfinder">
-      <div class="viewfinder-sweep"></div>
-      <div class="viewfinder-core">
-        <span id="active-routes">0</span>
-        <div class="viewfinder-label">Routes in view</div>
+      <!-- Viewfinder: the live count of routes currently in view -->
+      <div class="viewfinder">
+        <div class="viewfinder-sweep"></div>
+        <div class="viewfinder-core">
+          <span id="active-routes">0</span>
+          <div class="viewfinder-label">Routes in view</div>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="route-section">
-    <h2>Routes catalog<span class="h2-sub">host → target</span></h2>
-    <button id="refresh-btn" class="refresh-btn">Realign</button>
-  </section>
+    <section class="route-section">
+      <h2>Routes<span class="h2-sub">host → target</span></h2>
+      <button id="refresh-btn" class="refresh-btn">Realign</button>
+    </section>
 
-  <div id="routes-container">
-    <!-- Populated by dashboard.js; falls back to this empty state -->
-    <div class="empty">
+    <div id="routes-container">
+      <!-- Populated by dashboard.js; falls back to this empty state -->
+      <!-- <div class="empty">
       <p>Scanning the sky…</p>
       <p>Waiting on the first route to come into view.</p>
+    </div> -->
     </div>
-  </div>
+    <section class="trips-section">
+      <h2>Trips<span class="h2-sub"></span></h2>
 
-</div>
+
+      <div id="trips-container">
+        <!-- Populated by dashboard.js; falls back to this empty state -->
+        <!-- <div class="empty">
+      <p>Scanning the routes…</p>
+      <p>Waiting for a trip to be completed.</p>
+    </div> -->
+      </div>
+    </section>
+  </div>
 </body>
+
 </html>

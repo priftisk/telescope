@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"telescope/internal/roundtripper"
 	"telescope/internal/router"
 	"time"
 )
@@ -19,4 +20,10 @@ func NewDashboardData(routeTable *router.RouteTable, upTime time.Time) *Dashboar
 		Uptime:      time.Since(upTime).Milliseconds(),
 		Version:     "1.0.0",
 	}
+
+}
+
+type TripsData struct {
+	Trips    []roundtripper.Trip
+	TripsNum int64
 }

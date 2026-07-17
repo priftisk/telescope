@@ -13,6 +13,7 @@ import (
 	"telescope/internal/container"
 	"telescope/internal/dashboard"
 	"telescope/internal/proxy"
+	"telescope/internal/roundtripper"
 	router "telescope/internal/router"
 	"time"
 
@@ -28,16 +29,10 @@ type Server struct {
 	// Internal state
 	dashboard *dashboard.DashboardServer
 	proxy     *proxy.ProxyServer
+	trips     *roundtripper.Trips
 	wg        sync.WaitGroup
 }
 
-func (s *Server) GetStartTime() time.Time {
-	return s.startTime
-}
-
-func (s *Server) GetRouteTable() *router.RouteTable {
-	return s.routeTable
-}
 func NewServer() (*Server, error) {
 	apiClient, err := client.New(
 		client.FromEnv,
@@ -47,18 +42,19 @@ func NewServer() (*Server, error) {
 		return nil, fmt.Errorf("failed to create docker client: %w", err)
 	}
 
-	rt := &router.RouteTable{}
+	routeTable := router.NewRouteTable()
+	trips := roundtripper.NewTripsRecorder()
 	startTime := time.Now()
 
-	dashboardSrv, err := dashboard.NewDashboardServer(rt, startTime)
+	dashboardSrv, err := dashboard.NewDashboardServer(routeTable, trips, startTime)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dashboard server: %w", err)
 	}
-	proxySrv := proxy.NewProxyServer(rt)
+	proxySrv := proxy.NewProxyServer(routeTable, trips)
 
 	return &Server{
 		dockerClient: apiClient,
-		routeTable:   rt,
+		routeTable:   routeTable,
 		startTime:    startTime,
 		dashboard:    dashboardSrv,
 		proxy:        proxySrv,
@@ -94,24 +90,24 @@ func (s *Server) serve(ctx context.Context) error {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		var wg sync.WaitGroup
-		wg.Add(2)
+		// var wg sync.WaitGroup
+		s.wg.Add(2)
 
 		go func() {
-			defer wg.Done()
+			defer s.wg.Done()
 			if err := s.dashboard.Shutdown(shutdownCtx); err != nil {
 				slog.Error("Dashboard server shutdown error", "error", err)
 			}
 		}()
 
 		go func() {
-			defer wg.Done()
+			defer s.wg.Done()
 			if err := s.proxy.Shutdown(shutdownCtx); err != nil {
 				slog.Error("Proxy server shutdown error", "error", err)
 			}
 		}()
 
-		wg.Wait()
+		s.wg.Wait()
 	}()
 
 	slog.Info("Dashboard available at http://localhost:8900/dashboard")

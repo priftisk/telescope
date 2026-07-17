@@ -1,7 +1,6 @@
 package router
 
 import (
-	"log"
 	"log/slog"
 	"slices"
 	"sync"
@@ -12,6 +11,13 @@ type RouteTable struct {
 	Routes    []Route
 	Mutex     sync.RWMutex
 	HostIndex map[string][]*Route
+}
+
+func NewRouteTable() *RouteTable {
+	return &RouteTable{
+		Routes:    make([]Route, 0),
+		HostIndex: map[string][]*Route{},
+	}
 }
 
 func (rt *RouteTable) Register(container container.ContainerInfo) {
@@ -28,7 +34,7 @@ func (rt *RouteTable) Register(container container.ContainerInfo) {
 	lastIdx := len(rt.Routes) - 1
 	rt.HostIndex[new_route.HostName] = append(rt.HostIndex[new_route.HostName], &rt.Routes[lastIdx])
 
-	log.Printf("Registered: host=%s addr=%s", container.Labels.ProxyHost, container.Labels.ProxyPort)
+	slog.Info("Registered", "container", container.ContainerName, "host", container.Labels.ProxyHost, "addr", container.Labels.ProxyPort)
 
 }
 
@@ -38,15 +44,15 @@ func (rt *RouteTable) Deregister(containerID string) {
 		return r.ContainerID == containerID
 	})
 
-	slog.Info("deregistering container route", "container", containerID)
+	slog.Info("Deregistered", "container", containerID)
 	defer rt.Mutex.Unlock()
 }
 
-func (rt *RouteTable) Lookup(host string, path string) (string, bool) {
+func (rt *RouteTable) Lookup(host string, path string) (*Route, bool) {
 	rt.Mutex.RLock()
 	defer rt.Mutex.RUnlock()
 
-	// Strip port from host for comparison (e.g., "localhost:8901" -> "localhost")
+	// Strip port from host for comparison  ("localhost:8901" -> "localhost")
 	hostOnly := StripPort(host)
 
 	candidates := rt.HostIndex[hostOnly]
@@ -76,10 +82,10 @@ func (rt *RouteTable) Lookup(host string, path string) (string, bool) {
 	}
 
 	if bestMatch != nil {
-		return bestMatch.TargetAddress, true
+		return bestMatch, true
 	}
 
-	return "", false
+	return &Route{}, false
 }
 
 func (rt *RouteTable) List() []Route {

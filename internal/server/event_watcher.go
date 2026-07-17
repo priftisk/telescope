@@ -17,7 +17,7 @@ func (s *Server) watchEvents(ctx context.Context) {
 		Filters: filterArgs,
 	}
 
-	log.Println("starting docker event watcher")
+	slog.Info("starting docker event watcher")
 
 	eventChan := s.dockerClient.Events(ctx, eventOptions)
 
