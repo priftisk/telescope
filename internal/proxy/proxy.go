@@ -17,8 +17,8 @@ func (p *ProxyServer) MakeAndServe(route *router.Route, targetURL *url.URL, targ
 	}
 
 	proxy.ServeHTTP(w, r)
-	log.Printf("PROXY %s %s %s → %s",
-		r.Method, r.URL.Path, r.Host, targetURL)
+	log.Printf("PROXY[%s] %s %s → %s",
+		r.Host, r.Method, r.URL.Path, targetURL)
 }
 
 func RewriteProxy(route *router.Route, targetURL *url.URL, targetPath string, r *http.Request) func(*httputil.ProxyRequest) {
