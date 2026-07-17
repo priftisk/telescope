@@ -53,6 +53,7 @@ func (proxy *ProxyServer) ProxyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *ProxyServer) ListenAndServe() error {
+	slog.Info("Telescope proxy listening on :8901")
 	return p.httpServer.ListenAndServe()
 }
 

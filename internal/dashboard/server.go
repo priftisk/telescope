@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"path/filepath"
 	"telescope/internal"
@@ -21,6 +22,7 @@ type DashboardServer struct {
 }
 
 func (d *DashboardServer) ListenAndServe() error {
+	slog.Info("Dashboard available at http://localhost:8900/dashboard")
 	return d.httpServer.ListenAndServe()
 }
 

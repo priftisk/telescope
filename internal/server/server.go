@@ -110,9 +110,6 @@ func (s *Server) serve(ctx context.Context) error {
 		s.wg.Wait()
 	}()
 
-	slog.Info("Dashboard available at http://localhost:8900/dashboard")
-	slog.Info("Telescope proxy listening on :8901")
-
 	errCh := make(chan error, 2)
 
 	go func() {
