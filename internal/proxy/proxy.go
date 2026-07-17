@@ -6,12 +6,13 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"telescope/internal/router"
 )
 
-func (p *ProxyServer) MakeAndServe(targetURL *url.URL, targetPath string, w http.ResponseWriter, r *http.Request) {
+func (p *ProxyServer) MakeAndServe(route *router.Route, targetURL *url.URL, targetPath string, w http.ResponseWriter, r *http.Request) {
 
 	proxy := &httputil.ReverseProxy{
-		Rewrite:   RewriteProxy(targetURL, targetPath, r),
+		Rewrite:   RewriteProxy(route, targetURL, targetPath, r),
 		Transport: p.roundTripper,
 	}
 
@@ -20,15 +21,19 @@ func (p *ProxyServer) MakeAndServe(targetURL *url.URL, targetPath string, w http
 		r.Method, r.URL.Path, r.Host, targetURL)
 }
 
-func RewriteProxy(targetURL *url.URL, targetPath string, r *http.Request) func(*httputil.ProxyRequest) {
+func RewriteProxy(route *router.Route, targetURL *url.URL, targetPath string, r *http.Request) func(*httputil.ProxyRequest) {
 	return func(pr *httputil.ProxyRequest) {
 
 		pr.SetURL(targetURL)
 		pr.Out.Host = r.Host
-
-		// Strip the routing prefix before forwarding
 		if targetPath != "" {
-			pr.Out.URL.Path = strings.TrimPrefix(r.URL.Path, "/"+targetPath)
+			if route.URLPath == "/" { // Registered route has no path label, so dont strip anything
+				pr.Out.URL.Path = r.URL.Path
+
+			} else { // Strip the routing prefix before forwarding
+				pr.Out.URL.Path = strings.TrimPrefix(r.URL.Path, "/"+targetPath)
+
+			}
 			if pr.Out.URL.Path == "" {
 				pr.Out.URL.Path = "/"
 			}

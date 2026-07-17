@@ -34,7 +34,7 @@ func (rt *RouteTable) Register(container container.ContainerInfo) {
 	lastIdx := len(rt.Routes) - 1
 	rt.HostIndex[new_route.HostName] = append(rt.HostIndex[new_route.HostName], &rt.Routes[lastIdx])
 
-	slog.Info("Registered", "container", container.ContainerID, "host", container.Labels.ProxyHost, "addr", container.Labels.ProxyPort)
+	slog.Info("Registered", "container", container.ContainerName, "host", container.Labels.ProxyHost, "addr", container.Labels.ProxyPort)
 
 }
 
@@ -48,7 +48,7 @@ func (rt *RouteTable) Deregister(containerID string) {
 	defer rt.Mutex.Unlock()
 }
 
-func (rt *RouteTable) Lookup(host string, path string) (string, bool) {
+func (rt *RouteTable) Lookup(host string, path string) (*Route, bool) {
 	rt.Mutex.RLock()
 	defer rt.Mutex.RUnlock()
 
@@ -82,10 +82,10 @@ func (rt *RouteTable) Lookup(host string, path string) (string, bool) {
 	}
 
 	if bestMatch != nil {
-		return bestMatch.TargetAddress, true
+		return bestMatch, true
 	}
 
-	return "", false
+	return &Route{}, false
 }
 
 func (rt *RouteTable) List() []Route {

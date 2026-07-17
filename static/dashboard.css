@@ -374,6 +374,7 @@ a:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .trip-card {
@@ -403,7 +404,7 @@ a:focus-visible {
 
 .trip-method {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.72rem;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: 0.03em;
   padding: 0.15rem 0.45rem;
@@ -418,7 +419,7 @@ a:focus-visible {
 
 .trip-path {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
+  font-size: 1.15rem;
   color: var(--starlight);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -433,7 +434,7 @@ a:focus-visible {
 
 .trip-status {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.78rem;
+  font-size: 1.25rem;
   font-weight: 600;
   flex-shrink: 0;
 }
