@@ -20,12 +20,12 @@ type DashboardServer struct {
 	config     *config.ServerConfig
 	routeTable *router.RouteTable
 	trips      *roundtripper.Trips
-	startTime  time.Time
 	httpServer *http.Server
+	startTime  time.Time
 }
 
 func (d *DashboardServer) ListenAndServe() error {
-	slog.Info("Dashboard available at", "addr", net.JoinHostPort(d.config.DashboardHost, d.config.DashboardPort)+"/dashboard")
+	slog.Info("Dashboard available at", "addr", "http://"+net.JoinHostPort(d.config.DashboardHost, d.config.DashboardPort)+"/dashboard")
 	return d.httpServer.ListenAndServe()
 }
 
@@ -33,17 +33,23 @@ func (d *DashboardServer) Shutdown(ctx context.Context) error {
 	return d.httpServer.Shutdown(ctx)
 }
 
+func (d *DashboardServer) applyOpts(opts ...config.Opt) {
+	for _, opt := range opts { // Apply opts
+		opt(d.config)
+	}
+}
+
 func NewDashboardServer(rt *router.RouteTable, trips *roundtripper.Trips, startTime time.Time, opts ...config.Opt) (*DashboardServer, error) {
 	d := &DashboardServer{
-		config:     &config.ServerConfig{DashboardHost: "0.0.0.0", DashboardPort: "8900"}, // Defaults
+		config: &config.ServerConfig{
+			DashboardHost: config.DefaultHost,
+			DashboardPort: config.DefaultDashboardPort,
+		}, // Defaults
 		routeTable: rt,
 		trips:      trips,
 		startTime:  startTime,
 	}
-	for _, opt := range opts { // Apply opts
-		opt(d.config)
-	}
-
+	d.applyOpts(opts...)
 	mux := http.NewServeMux()
 	// mux.HandleFunc("GET /routes", d.RoutesHandler)
 	mux.HandleFunc("GET /dashboard", d.DashboardHandler)
@@ -96,7 +102,7 @@ func (d *DashboardServer) DashboardResourceHandler(w http.ResponseWriter, r *htt
 		json.NewEncoder(w).Encode(trips)
 	default:
 		w.WriteHeader(404)
-		json.NewEncoder(w).Encode([]byte("Not found"))
+		json.NewEncoder(w).Encode([]byte(resource + " not found."))
 	}
 
 }

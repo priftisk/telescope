@@ -8,8 +8,7 @@ import (
 
 func main() {
 	server, err := server.NewServer(
-		config.WithProxyAddress("0.0.0.0:8999"),
-		config.WithDashboardAddress("0.0.0.0:8925"),
+		config.WithLocalhostDefaults(),
 	)
 	if err != nil {
 		log.Fatalf("Failed to create server: %v", err)

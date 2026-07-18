@@ -11,6 +11,22 @@ type ServerConfig struct {
 	DashboardPort string
 }
 
+const (
+	DefaultHost          = "0.0.0.0"
+	DefaultProxyPort     = "8999"
+	DefaultDashboardPort = "8901"
+	DefaultProxyAddr     = DefaultHost + ":" + DefaultProxyPort
+	DefaultDashboardAddr = DefaultHost + ":" + DefaultDashboardPort
+)
+
+func WithLocalhostDefaults() Opt {
+	return func(sc *ServerConfig) error {
+		sc.ProxyHost, sc.ProxyPort, _ = net.SplitHostPort(DefaultProxyAddr)
+		sc.DashboardHost, sc.DashboardPort, _ = net.SplitHostPort(DefaultDashboardAddr)
+		return nil
+	}
+}
+
 func WithProxyAddress(hostport string) Opt {
 	return func(sc *ServerConfig) error {
 		var host, port string

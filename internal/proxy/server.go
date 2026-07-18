@@ -20,15 +20,22 @@ type ProxyServer struct {
 	roundTripper *roundtripper.ProxyRoundTripper
 }
 
-func NewProxyServer(rt *router.RouteTable, trips *roundtripper.Trips, opts ...config.Opt) *ProxyServer {
-	p := &ProxyServer{
-		config:       &config.ServerConfig{ProxyHost: "0.0.0.0", ProxyPort: "8999"}, // Defaults
-		routeTable:   rt,
-		roundTripper: roundtripper.NewProxyRoundTripper(trips),
-	}
+func (p *ProxyServer) applyOpts(opts ...config.Opt) {
 	for _, opt := range opts {
 		opt(p.config)
 	}
+}
+
+func NewProxyServer(rt *router.RouteTable, trips *roundtripper.Trips, opts ...config.Opt) *ProxyServer {
+	p := &ProxyServer{
+		config: &config.ServerConfig{
+			ProxyHost: config.DefaultHost,
+			ProxyPort: config.DefaultProxyPort,
+		}, // Defaults
+		routeTable:   rt,
+		roundTripper: roundtripper.NewProxyRoundTripper(trips),
+	}
+	p.applyOpts(opts...)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", p.ProxyHandler)
 
