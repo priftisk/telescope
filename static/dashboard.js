@@ -1,6 +1,9 @@
-const BASE_URL = "http://localhost:8900/dashboard";
 const REFRESH_INTERVAL_MS = 5000;
 let refreshTimer = null;
+let hostname = () => {
+    return location.protocol + '//' + location.host
+}
+const BASE_URL = hostname() + "/dashboard";
 
 // ---------- Formatting helpers ----------
 
@@ -210,7 +213,6 @@ async function getDashboardTrips() {
     try {
         const result = await fetchJson('trips');
         renderTrips(result)
-        console.log(result);
     } catch (error) {
         console.error(error.message);
     }

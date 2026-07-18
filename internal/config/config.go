@@ -2,22 +2,37 @@ package config
 
 import "net"
 
-type Opt func(*ProxyConfig) error
+type Opt func(*ServerConfig) error
 
-type ProxyConfig struct {
-	Host string
-	Port string
+type ServerConfig struct {
+	ProxyHost     string
+	ProxyPort     string
+	DashboardHost string
+	DashboardPort string
 }
 
 func WithProxyAddress(hostport string) Opt {
-	return func(sc *ProxyConfig) error {
+	return func(sc *ServerConfig) error {
 		var host, port string
 		var err error
 		if host, port, err = net.SplitHostPort(hostport); err != nil {
 			return err
 		}
-		sc.Host = host
-		sc.Port = port
+		sc.ProxyHost = host
+		sc.ProxyPort = port
+		return nil
+	}
+}
+
+func WithDashboardAddress(hostport string) Opt {
+	return func(sc *ServerConfig) error {
+		var host, port string
+		var err error
+		if host, port, err = net.SplitHostPort(hostport); err != nil {
+			return err
+		}
+		sc.DashboardHost = host
+		sc.DashboardPort = port
 		return nil
 	}
 }

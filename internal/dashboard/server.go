@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"path/filepath"
 	"telescope/internal"
+	"telescope/internal/config"
 	"telescope/internal/roundtripper"
 	"telescope/internal/router"
 	"text/template"
@@ -15,6 +17,7 @@ import (
 )
 
 type DashboardServer struct {
+	config     *config.ServerConfig
 	routeTable *router.RouteTable
 	trips      *roundtripper.Trips
 	startTime  time.Time
@@ -22,7 +25,7 @@ type DashboardServer struct {
 }
 
 func (d *DashboardServer) ListenAndServe() error {
-	slog.Info("Dashboard available at http://localhost:8900/dashboard")
+	slog.Info("Dashboard available at", "addr", net.JoinHostPort(d.config.DashboardHost, d.config.DashboardPort)+"/dashboard")
 	return d.httpServer.ListenAndServe()
 }
 
@@ -30,17 +33,21 @@ func (d *DashboardServer) Shutdown(ctx context.Context) error {
 	return d.httpServer.Shutdown(ctx)
 }
 
-func NewDashboardServer(rt *router.RouteTable, trips *roundtripper.Trips, startTime time.Time) (*DashboardServer, error) {
+func NewDashboardServer(rt *router.RouteTable, trips *roundtripper.Trips, startTime time.Time, opts ...config.Opt) (*DashboardServer, error) {
 	d := &DashboardServer{
+		config:     &config.ServerConfig{DashboardHost: "0.0.0.0", DashboardPort: "8900"}, // Defaults
 		routeTable: rt,
 		trips:      trips,
 		startTime:  startTime,
+	}
+	for _, opt := range opts { // Apply opts
+		opt(d.config)
 	}
 
 	mux := http.NewServeMux()
 	// mux.HandleFunc("GET /routes", d.RoutesHandler)
 	mux.HandleFunc("GET /dashboard", d.DashboardHandler)
-	mux.HandleFunc("/dashboard/{resource}", d.DashboardResourceHandler)
+	mux.HandleFunc("GET /dashboard/{resource}", d.DashboardResourceHandler)
 
 	staticDir, err := internal.GetStaticDir()
 	if err != nil {
@@ -48,9 +55,8 @@ func NewDashboardServer(rt *router.RouteTable, trips *roundtripper.Trips, startT
 	}
 	mux.Handle("GET /static/", http.StripPrefix("/static/",
 		http.FileServer(http.Dir(staticDir))))
-
 	d.httpServer = &http.Server{
-		Addr:    ":8900",
+		Addr:    net.JoinHostPort(d.config.DashboardHost, d.config.DashboardPort),
 		Handler: mux,
 	}
 	return d, nil
@@ -58,7 +64,7 @@ func NewDashboardServer(rt *router.RouteTable, trips *roundtripper.Trips, startT
 
 func (d *DashboardServer) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 
-	data := NewDashboardData(d.routeTable, d.startTime)
+	data := NewDashboardData(d.routeTable, d.startTime, d.config)
 	static_dir, err := internal.GetStaticDir()
 	if err != nil {
 		fmt.Printf("%+v\n", err.Error())
@@ -79,7 +85,7 @@ func (d *DashboardServer) DashboardResourceHandler(w http.ResponseWriter, r *htt
 	resource := r.PathValue("resource")
 	switch resource {
 	case "data":
-		data := NewDashboardData(d.routeTable, d.startTime)
+		data := NewDashboardData(d.routeTable, d.startTime, d.config)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(data)

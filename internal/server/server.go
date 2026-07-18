@@ -47,7 +47,7 @@ func NewServer(opts ...config.Opt) (*Server, error) {
 	trips := roundtripper.NewTripsRecorder()
 	startTime := time.Now()
 
-	dashboardSrv, err := dashboard.NewDashboardServer(routeTable, trips, startTime)
+	dashboardSrv, err := dashboard.NewDashboardServer(routeTable, trips, startTime, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dashboard server: %w", err)
 	}
