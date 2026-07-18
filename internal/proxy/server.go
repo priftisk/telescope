@@ -4,30 +4,43 @@ import (
 	"context"
 	"log"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/url"
+	"telescope/internal/config"
 	"telescope/internal/roundtripper"
 	"telescope/internal/router"
 )
 
 type ProxyServer struct {
+	config       *config.ServerConfig
 	routeTable   *router.RouteTable
 	trips        *roundtripper.Trips
 	httpServer   *http.Server
 	roundTripper *roundtripper.ProxyRoundTripper
 }
 
-func NewProxyServer(rt *router.RouteTable, trips *roundtripper.Trips) *ProxyServer {
+func (p *ProxyServer) applyOpts(opts ...config.Opt) {
+	for _, opt := range opts {
+		opt(p.config)
+	}
+}
+
+func NewProxyServer(rt *router.RouteTable, trips *roundtripper.Trips, opts ...config.Opt) *ProxyServer {
 	p := &ProxyServer{
+		config: &config.ServerConfig{
+			ProxyHost: config.DefaultHost,
+			ProxyPort: config.DefaultProxyPort,
+		}, // Defaults
 		routeTable:   rt,
 		roundTripper: roundtripper.NewProxyRoundTripper(trips),
 	}
-
+	p.applyOpts(opts...)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", p.ProxyHandler)
 
 	p.httpServer = &http.Server{
-		Addr:    ":8901",
+		Addr:    net.JoinHostPort(p.config.ProxyHost, p.config.ProxyPort),
 		Handler: mux,
 	}
 	return p
@@ -53,7 +66,7 @@ func (proxy *ProxyServer) ProxyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *ProxyServer) ListenAndServe() error {
-	slog.Info("Telescope proxy listening on :8901")
+	slog.Info("Telescope proxy listening on", "addr", "http://"+p.config.ProxyHost+":"+p.config.ProxyPort)
 	return p.httpServer.ListenAndServe()
 }
 

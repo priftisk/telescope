@@ -66,7 +66,7 @@ func (rt *RouteTable) Lookup(host string, path string) (*Route, bool) {
 		}
 	}
 
-	var bestMatch *Route
+	var bestMatch *Route = &Route{}
 	bestPathLen := -1
 
 	for _, route := range candidates { // Match based on closest path length
@@ -81,11 +81,7 @@ func (rt *RouteTable) Lookup(host string, path string) (*Route, bool) {
 		}
 	}
 
-	if bestMatch != nil {
-		return bestMatch, true
-	}
-
-	return &Route{}, false
+	return bestMatch, bestMatch != nil
 }
 
 func (rt *RouteTable) List() []Route {

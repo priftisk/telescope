@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"telescope/internal/config"
 	"telescope/internal/container"
 	"telescope/internal/dashboard"
 	"telescope/internal/proxy"
@@ -33,7 +34,7 @@ type Server struct {
 	wg        sync.WaitGroup
 }
 
-func NewServer() (*Server, error) {
+func NewServer(opts ...config.Opt) (*Server, error) {
 	apiClient, err := client.New(
 		client.FromEnv,
 		client.WithUserAgent("telescope/1.0.0"),
@@ -46,11 +47,11 @@ func NewServer() (*Server, error) {
 	trips := roundtripper.NewTripsRecorder()
 	startTime := time.Now()
 
-	dashboardSrv, err := dashboard.NewDashboardServer(routeTable, trips, startTime)
+	dashboardSrv, err := dashboard.NewDashboardServer(routeTable, trips, startTime, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dashboard server: %w", err)
 	}
-	proxySrv := proxy.NewProxyServer(routeTable, trips)
+	proxySrv := proxy.NewProxyServer(routeTable, trips, opts...)
 
 	return &Server{
 		dockerClient: apiClient,

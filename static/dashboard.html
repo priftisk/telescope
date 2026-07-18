@@ -32,6 +32,10 @@
             <div class="plate-label">Version</div>
             <div class="plate-value">{{.Version}}</div>
           </div>
+          <div id="proxy-addr-container" class="plate">
+            <div class="plate-label">Proxy Address</div>
+            <div id="proxy-addr" class="plate-value">{{.ProxyAddr}}</div>
+          </div>
         </div>
       </div>
 
@@ -58,15 +62,15 @@
     </div> -->
     </div>
     <section class="trips-section">
-      <h2>Trips<span class="h2-sub"></span></h2>
+      <h2 style="margin-top: 10px; margin-bottom: 10px;">Trips<span class="h2-sub"></span></h2>
 
 
       <div id="trips-container">
         <!-- Populated by dashboard.js; falls back to this empty state -->
-        <!-- <div class="empty">
-      <p>Scanning the routes…</p>
-      <p>Waiting for a trip to be completed.</p>
-    </div> -->
+        <div class="empty">
+          <p>Scanning the routes…</p>
+          <p>Waiting for a trip to be completed.</p>
+        </div>
       </div>
     </section>
   </div>
